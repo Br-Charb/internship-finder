@@ -1,0 +1,120 @@
+# =====================================================================
+#  Where the job finder looks
+#  Every source is optional. If one stops working, the run keeps going
+#  and the bottom of your job page lists which sources failed.
+# =====================================================================
+
+# NOTE: plain `key = [...]` lines must stay ABOVE the first [table] or
+# [[table]] header. TOML attaches anything below a header to that table,
+# which silently hid every company board from the scan.
+
+# --- Company career boards ---------------------------------------------
+# board = the company's ID on that hiring system (the part of their
+# careers URL after greenhouse.io/, jobs.lever.co/, or jobs.ashbyhq.com/).
+# To add a company: find one of their job links, copy the ID, add a line.
+
+greenhouse = [
+  { name = "SpaceX", board = "spacex" },
+  { name = "Anduril", board = "andurilindustries" },
+  { name = "Relativity Space", board = "relativity" },
+  { name = "Rocket Lab", board = "rocketlab" },
+  { name = "Astranis", board = "astranis" },
+  { name = "Planet", board = "planetlabs" },
+  { name = "Zipline", board = "flyzipline" },
+  { name = "Varda Space", board = "vardaspace" },
+  { name = "True Anomaly", board = "trueanomalyinc" },
+  { name = "K2 Space", board = "k2spacecorporation" },
+  { name = "Terran Orbital", board = "terranorbitalcorporation" },
+  { name = "Voyager Technologies", board = "voyagertechnologiesinc" },
+  { name = "Muon Space", board = "muonspace" },
+  { name = "Vast Space", board = "vast" },
+  { name = "Ursa Major", board = "ursamajor" },
+  { name = "Archer Aviation", board = "archer56" },
+  { name = "JetZero", board = "jetzero" },
+  { name = "Electra Aero", board = "electraaero" },
+  { name = "Epirus", board = "epirus" },
+  # Removed Oct 2026 (board gone): Axiom Space -> now on Workday below,
+  # Boom Supersonic -> moved to Rippling (not supported).
+]
+
+lever = [
+  { name = "Shield AI", board = "shieldai" },
+  { name = "Hermeus", board = "hermeus" },
+]
+
+ashby = [
+  { name = "Hadrian", board = "hadrian-automation" },
+  { name = "Saronic", board = "saronic" },
+]
+
+# Workday career sites (most large aerospace/defense companies).
+# host + site come straight from the company's careers URL, e.g.
+#   https://ngc.wd1.myworkdayjobs.com/Northrop_Grumman_External_Site
+#        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ host  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ site
+workday = [
+  { name = "Northrop Grumman", host = "ngc.wd1.myworkdayjobs.com", site = "Northrop_Grumman_External_Site" },
+  { name = "Boeing", host = "boeing.wd1.myworkdayjobs.com", site = "EXTERNAL_CAREERS" },
+  { name = "RTX (Raytheon, Pratt & Whitney, Collins)", host = "globalhr.wd5.myworkdayjobs.com", site = "REC_RTX_Ext_Gateway" },
+  { name = "Blue Origin", host = "blueorigin.wd5.myworkdayjobs.com", site = "BlueOrigin" },
+  { name = "GE Aerospace", host = "geaerospace.wd5.myworkdayjobs.com", site = "GE_ExternalSite" },
+  { name = "Boeing (intern site)", host = "boeing.wd1.myworkdayjobs.com", site = "INTERN" },
+  { name = "Sierra Space", host = "sierraspace.wd1.myworkdayjobs.com", site = "Sierra_Space_External_Career_Site" },
+  { name = "Axiom Space", host = "axiomspace.wd5.myworkdayjobs.com", site = "External_Career_Site" },
+  { name = "AeroVironment", host = "avav.wd1.myworkdayjobs.com", site = "avav" },
+  { name = "Airbus", host = "ag.wd3.myworkdayjobs.com", site = "Airbus" },
+  { name = "Draper", host = "draper.wd5.myworkdayjobs.com", site = "Draper_Careers" },
+  { name = "Moog", host = "moog.wd5.myworkdayjobs.com", site = "moog_external_career_site" },
+  { name = "NASA Jet Propulsion Laboratory", host = "citjpl.wd5.myworkdayjobs.com", site = "Jobs" },
+  { name = "The Aerospace Corporation", host = "aero.wd5.myworkdayjobs.com", site = "external" },
+]
+
+# Eightfold career sites: host is the *.eightfold.ai address, domain is the
+# `domain=` value in the site's /api/pcsx/search requests.
+eightfold = [
+  { name = "Lockheed Martin", host = "lockheedmartin.eightfold.ai", domain = "lockheedmartin.com" },
+]
+
+# ClearCompany career sites: site_id is the GUID in the page's
+# careers-api.clearcompany.com/v1/<site_id> request.
+clearcompany = [
+  { name = "Firefly Aerospace", site_id = "00ed92c3-5bfb-7bfb-456d-4d9d77fef9a5" },
+]
+
+# Not supported (no public job API), so they rely on the Simplify list:
+#   L3Harris (SuccessFactors behind careers.l3harris.com), Joby Aviation (iCIMS),
+#   Boom Supersonic (Rippling), BAE Systems / Textron (Taleo), General Dynamics (iCIMS).
+
+# --- Big student internship lists maintained on GitHub ----------------
+# Simplify + Pitt CSC's Summer 2027 list (thousands of roles, updated daily).
+[[list]]
+name = "Simplify Summer 2027 list"
+urls = [
+  "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/dev/.github/scripts/listings.json",
+  "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/main/.github/scripts/listings.json",
+]
+
+# --- Federal jobs (DoD, Air Force, Navy, NASA) via USAJOBS --------------
+# Free API key: https://developer.usajobs.gov/apirequest/
+# Then add USAJOBS_API_KEY and USAJOBS_EMAIL as repo secrets (see README).
+[usajobs]
+keywords = ["aerospace engineering student", "engineering student trainee", "aerospace intern"]
+
+# --- Companies treated as aerospace, even when a posting is vague -------
+# Matched against company names (lowercase, partial match is fine).
+[aerospace_companies]
+names = [
+  "spacex", "blue origin", "northrop", "lockheed", "boeing", "rtx", "raytheon",
+  "pratt", "collins aerospace", "l3harris", "ge aerospace", "rocket lab",
+  "relativity", "firefly", "sierra space", "anduril", "general atomics",
+  "general dynamics", "textron", "bell flight", "sikorsky", "gulfstream",
+  "honeywell aerospace", "axiom", "astranis", "joby", "archer aviation",
+  "boom supersonic", "hermeus", "varda", "stoke space", "impulse space",
+  "ursa major", "aerojet", "nasa", "jet propulsion", "virgin galactic",
+  "united launch", "airbus", "spirit aerosystems", "moog", "ball aerospace",
+  "bae systems", "maxar", "planet labs", "york space", "terran orbital",
+  "vast space", "k2 space", "apex space", "hadrian", "shield ai", "saronic",
+  "castelion", "astrobotic", "intuitive machines", "redwire", "aerovironment",
+  "kratos", "embraer", "zipline", "voyager space", "voyager technologies", "true anomaly", "radian aerospace",
+  "astra space", "abl space", "aerospace corporation", "mitre", "draper",
+  "muon space", "jetzero", "electra aero",
+]
