@@ -10,7 +10,7 @@ JOBS = [
     {
         "company": "Example Co",
         "title": "Software Engineering Intern",
-        "location": "Remote",
+        "location": "Remote - US",
         "url": "https://jobs.example.test/software-intern-123",
         "source": "Example careers",
         "posted": "2026-10-13",
@@ -45,8 +45,8 @@ class FakeState:
         self.seeded.append((job["key"], category.key if category else "uncategorized"))
         return True
 
-    def ignore(self, job):
-        self.ignored.append(job["key"])
+    def ignore(self, job, reason="uncategorized"):
+        self.ignored.append((job["key"], reason))
         return True
 
     def claim(self, job, category):
@@ -87,7 +87,7 @@ class ExecutionTests(unittest.TestCase):
     @patch.object(run, "fetch_all", return_value=([{
         "company": "Example Co",
         "title": "General Intern",
-        "location": "Remote",
+        "location": "Boston, MA",
         "url": "https://jobs.example.test/general-intern-seed",
         "source": "Example careers",
         "posted": "2026-10-13",
@@ -118,7 +118,7 @@ class ExecutionTests(unittest.TestCase):
     @patch.object(run, "fetch_all", return_value=([{
         "company": "Example Co",
         "title": "General Intern",
-        "location": "Remote",
+        "location": "Boston, MA",
         "url": "https://jobs.example.test/general-intern-456",
         "source": "Example careers",
         "posted": "2026-10-13",
@@ -131,6 +131,40 @@ class ExecutionTests(unittest.TestCase):
             summary = run.execute()
         self.assertEqual(1, summary["ignored"])
         self.assertEqual(1, len(FakeState.instance.ignored))
+        self.assertEqual("uncategorized", FakeState.instance.ignored[0][1])
+        post.assert_not_called()
+
+    @patch.object(run, "DynamoSeenJobs", FakeState)
+    @patch.object(run, "github_list_revision", return_value="")
+    @patch.object(run, "fetch_all", return_value=([{
+        **JOBS[0],
+        "location": "Toronto, Canada",
+        "url": "https://jobs.example.test/canada-intern-1",
+    }], []))
+    def test_non_us_job_is_remembered_without_delivery(self, _fetch, _revision):
+        urls = {category.key: f"https://discord.com/api/webhooks/{category.key}/secret" for category in run.CATEGORIES}
+        with self.env(), patch.object(run, "_webhook_urls", return_value=urls), \
+                patch.object(run, "post_to_discord") as post:
+            summary = run.execute()
+        self.assertEqual(1, summary["outside_us_or_unknown"])
+        self.assertEqual("outside_us", FakeState.instance.ignored[0][1])
+        post.assert_not_called()
+
+    @patch.object(run, "DynamoSeenJobs", FakeState)
+    @patch.object(run, "github_list_revision", return_value="")
+    @patch.object(run, "fetch_all", return_value=([{
+        **JOBS[0],
+        "location": "Miami, FL",
+        "posted": "2020-01-01",
+        "url": "https://jobs.example.test/stale-intern-1",
+    }], []))
+    def test_stale_job_is_remembered_without_delivery(self, _fetch, _revision):
+        urls = {category.key: f"https://discord.com/api/webhooks/{category.key}/secret" for category in run.CATEGORIES}
+        with self.env(), patch.object(run, "_webhook_urls", return_value=urls), \
+                patch.object(run, "post_to_discord") as post:
+            summary = run.execute()
+        self.assertEqual(1, summary["stale"])
+        self.assertEqual("stale", FakeState.instance.ignored[0][1])
         post.assert_not_called()
 
     def test_webhook_test_posts_once_per_category(self):

@@ -27,7 +27,9 @@ from jobfinder.match import (
     Category,
     categorize_job,
     graduation_window,
+    is_recent_posting,
     is_target_job,
+    is_united_states_job,
     requirements_snippet,
 )
 from jobfinder.sources import fetch_all, fetch_description, github_list_revision
@@ -198,8 +200,8 @@ class DynamoSeenJobs:
             raise
         return True
 
-    def ignore(self, job: dict[str, Any]) -> bool:
-        """Remember an uncategorized job so every poll does not process it again."""
+    def ignore(self, job: dict[str, Any], reason: str = "uncategorized") -> bool:
+        """Remember a rejected job so every poll does not process it again."""
         now = _iso_now()
         try:
             self.table.put_item(
@@ -210,7 +212,7 @@ class DynamoSeenJobs:
                     "updated_at": now,
                     "job_title": str(job.get("title") or "")[:500],
                     "company": str(job.get("company") or "")[:300],
-                    "category": "uncategorized",
+                    "category": reason,
                     "job_url": str(job.get("url") or "")[:1500],
                 },
                 ConditionExpression="attribute_not_exists(job_id)",
@@ -444,6 +446,7 @@ def execute(seed_only: bool = False, only_sources: set[str] | None = None) -> di
     scope = os.environ.get("JOB_SCOPE", "internships")
     description_limit = max(0, int(os.environ.get("MAX_DESCRIPTION_LOOKUPS", "100")))
     delivery_limit = max(1, int(os.environ.get("MAX_JOBS_PER_RUN", "40")))
+    max_age_days = max(0, int(os.environ.get("MAX_POSTING_AGE_DAYS", "14")))
     table_name = os.environ.get("DYNAMODB_TABLE", DEFAULT_TABLE).strip()
     if not table_name:
         raise ValueError("DYNAMODB_TABLE cannot be empty")
@@ -469,13 +472,28 @@ def execute(seed_only: bool = False, only_sources: set[str] | None = None) -> di
     known = state.known_ids(list(jobs_by_id))
     new_jobs = [job for key, job in jobs_by_id.items() if key not in known]
     new_jobs.sort(key=lambda job: (str(job.get("posted") or ""), str(job.get("company") or "")), reverse=True)
+
+    outside_us: list[dict[str, Any]] = []
+    stale: list[dict[str, Any]] = []
+    candidates: list[dict[str, Any]] = []
+    for job in new_jobs:
+        if not is_united_states_job(
+            str(job.get("location") or ""),
+            str(job.get("country") or ""),
+        ):
+            outside_us.append(job)
+        elif not is_recent_posting(str(job.get("posted") or ""), max_age_days=max_age_days):
+            stale.append(job)
+        else:
+            candidates.append(job)
+
     # A baseline never sends notifications, so fetching thousands of full job
     # pages would add time and network cost without changing user-visible output.
-    loaded = 0 if seed_only else _fill_descriptions(new_jobs, description_limit)
+    loaded = 0 if seed_only else _fill_descriptions(candidates, description_limit)
 
     routed: list[tuple[dict[str, Any], Category, list[str]]] = []
     unmatched: list[dict[str, Any]] = []
-    for job in new_jobs:
+    for job in candidates:
         category, terms = categorize_job(str(job.get("title") or ""), str(job.get("description") or ""))
         if category:
             routed.append((job, category, terms))
@@ -494,8 +512,20 @@ def execute(seed_only: bool = False, only_sources: set[str] | None = None) -> di
             else:
                 skipped_claim += 1
     else:
+        for job in outside_us:
+            if state.ignore(job, "outside_us"):
+                ignored += 1
+            else:
+                skipped_claim += 1
+
+        for job in stale:
+            if state.ignore(job, "stale"):
+                ignored += 1
+            else:
+                skipped_claim += 1
+
         for job in unmatched:
-            if state.ignore(job):
+            if state.ignore(job, "uncategorized"):
                 ignored += 1
             else:
                 skipped_claim += 1
@@ -529,6 +559,10 @@ def execute(seed_only: bool = False, only_sources: set[str] | None = None) -> di
         "eligible_unique_jobs": len(jobs_by_id),
         "previously_seen": len(known),
         "unseen": len(new_jobs),
+        "us_recent_candidates": len(candidates),
+        "outside_us_or_unknown": len(outside_us),
+        "stale": len(stale),
+        "max_posting_age_days": max_age_days,
         "descriptions_loaded": loaded,
         "categorized": len(routed),
         "delivered": delivered,

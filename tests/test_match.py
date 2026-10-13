@@ -1,6 +1,14 @@
+import datetime as dt
 import unittest
 
-from jobfinder.match import categorize_job, graduation_window, is_target_job, requirements_snippet
+from jobfinder.match import (
+    categorize_job,
+    graduation_window,
+    is_recent_posting,
+    is_target_job,
+    is_united_states_job,
+    requirements_snippet,
+)
 
 
 class CategorizationTests(unittest.TestCase):
@@ -57,6 +65,31 @@ class ParsingTests(unittest.TestCase):
         self.assertTrue(is_target_job("Engineering Rotation", employment_type="Internship"))
         self.assertTrue(is_target_job("New Graduate Software Engineer"))
         self.assertFalse(is_target_job("Software Sales Intern"))
+
+    def test_strict_us_locations(self) -> None:
+        accepted = (
+            "Seattle, WA",
+            "New York, New York, United States of America",
+            "Remote - US",
+            "Toronto, Canada; Austin, TX",
+            "California",
+            "Washington, DC",
+        )
+        rejected = ("Remote", "London, UK", "Toronto, Canada", "Multiple locations", "")
+        for location in accepted:
+            with self.subTest(location=location):
+                self.assertTrue(is_united_states_job(location))
+        for location in rejected:
+            with self.subTest(location=location):
+                self.assertFalse(is_united_states_job(location))
+
+    def test_posting_freshness(self) -> None:
+        today = dt.date(2026, 10, 13)
+        self.assertTrue(is_recent_posting("2026-10-01", 14, today))
+        self.assertFalse(is_recent_posting("2026-09-01", 14, today))
+        self.assertTrue(is_recent_posting("", 14, today))
+        self.assertTrue(is_recent_posting("not supplied", 14, today))
+        self.assertTrue(is_recent_posting("2020-01-01", 0, today))
 
     def test_requirement_section(self) -> None:
         description = """About us

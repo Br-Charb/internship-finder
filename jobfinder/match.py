@@ -6,6 +6,7 @@ tested locally.
 """
 from __future__ import annotations
 
+import datetime as dt
 import re
 from dataclasses import dataclass, field
 
@@ -20,6 +21,25 @@ _NON_TARGET_TITLE = re.compile(
     r"(?i)(?<![a-z])(sales|marketing|recruit(?:er|ing)|talent acquisition|human resources|"
     r"legal|counsel|customer success|customer support|communications?|public relations|"
     r"business development)(?![a-z])"
+)
+
+_US_MARKER = re.compile(
+    r"(?i)(?<![a-z])(?:united states(?: of america)?|u\.?s\.?(?:a\.?)?|remote\s*[-,/()]\s*u\.?s\.?)"
+    r"(?![a-z])"
+)
+_US_STATE_NAMES = re.compile(
+    r"(?i)(?<![a-z])(?:alabama|alaska|arizona|arkansas|california|colorado|connecticut|"
+    r"delaware|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|"
+    r"louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|"
+    r"montana|nebraska|nevada|new hampshire|new jersey|new mexico|new york|north carolina|"
+    r"north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|"
+    r"south dakota|tennessee|texas|utah|vermont|virginia|washington|west virginia|"
+    r"wisconsin|wyoming|district of columbia)(?![a-z])"
+)
+_US_STATE_CODE = re.compile(
+    r"(?i)(?:^|[,;/|()]|\s-\s)\s*(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|"
+    r"KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|"
+    r"TN|TX|UT|VT|VA|WA|WV|WI|WY|DC)(?:\s|$|[,;/|()])"
 )
 
 
@@ -38,6 +58,36 @@ def is_target_job(title: str, scope: str = "internships", employment_type: str =
         _INTERNSHIP_TITLE.search(title)
         or re.search(r"(?i)(?<![a-z])(intern(?:ship)?|co[ -]?op|apprentice)(?![a-z])", employment_type or "")
     )
+
+
+def is_united_states_job(location: str, country: str = "") -> bool:
+    """Return true only when structured location text identifies the U.S.
+
+    A bare ``Remote`` or ``Multiple locations`` is intentionally not accepted:
+    strict U.S.-only delivery is preferable to guessing and posting an
+    international role. Multi-location strings pass when any listed location is
+    in the United States.
+    """
+    text = " ".join(part.strip() for part in (country, location) if part and part.strip())
+    if not text:
+        return False
+    return bool(_US_MARKER.search(text) or _US_STATE_NAMES.search(text) or _US_STATE_CODE.search(text))
+
+
+def is_recent_posting(
+    posted: str,
+    max_age_days: int = 14,
+    now: dt.date | None = None,
+) -> bool:
+    """Reject reliably dated stale jobs while retaining sources with no date."""
+    if max_age_days <= 0 or not posted:
+        return True
+    try:
+        posted_date = dt.date.fromisoformat(str(posted)[:10])
+    except ValueError:
+        return True
+    today = now or dt.datetime.now(dt.timezone.utc).date()
+    return posted_date >= today - dt.timedelta(days=max_age_days)
 
 
 def _compile_term(term: str) -> re.Pattern[str]:
