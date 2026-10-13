@@ -55,6 +55,13 @@ CUSTOM_SECTIONS = {
     "meta", "microsoft", "netflix", "shopify", "sig", "twosigma", "uber",
 }
 
+# Upstream boards occasionally migrate ATS providers before the registry is
+# updated. Keep verified corrections here so a later refresh cannot restore a
+# retired endpoint.
+SOURCE_OVERRIDES: dict[str, dict[str, Any]] = {
+    "fireworks ai": {"ats": "ashby", "slug": "fireworks"},
+}
+
 
 def _split_top_level(value: str) -> list[str]:
     parts: list[str] = []
@@ -116,6 +123,10 @@ def parse_registry(text: str) -> list[dict[str, Any]]:
 
 
 def convert_company(company: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    company = {
+        **company,
+        **SOURCE_OVERRIDES.get(str(company.get("name", "")).casefold(), {}),
+    }
     section = str(company["ats"]).lower()
     entry: dict[str, Any] = {
         "name": str(company["name"]),
@@ -168,8 +179,13 @@ def source_identity(section: str, entry: dict[str, Any]) -> tuple[str, ...]:
 
 
 def merge(existing: dict[str, Any], upstream: list[dict[str, Any]]) -> dict[str, Any]:
+    overridden_names = set(SOURCE_OVERRIDES)
     result: dict[str, Any] = {
-        section: [dict(entry) for entry in existing.get(section, [])]
+        section: [
+            dict(entry)
+            for entry in existing.get(section, [])
+            if str(entry.get("name", "")).casefold() not in overridden_names
+        ]
         for section in SECTION_ORDER
         if isinstance(existing.get(section), list)
     }

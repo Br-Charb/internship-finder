@@ -258,12 +258,6 @@ tier = 2
 group = "ai"
 
 [[greenhouse]]
-name = "Fireworks AI"
-board = "fireworksai"
-tier = 2
-group = "ai"
-
-[[greenhouse]]
 name = "SambaNova"
 board = "sambanovasystems"
 tier = 2
@@ -1000,6 +994,12 @@ group = "ai"
 [[ashby]]
 name = "Decagon"
 board = "decagon"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Fireworks AI"
+board = "fireworks"
 tier = 2
 group = "ai"
 
