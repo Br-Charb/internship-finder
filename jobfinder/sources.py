@@ -17,6 +17,17 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import quote, urlparse
 
+from .custom_sources import (
+    fetch_apple,
+    fetch_bloomberg,
+    fetch_citadel,
+    fetch_deshaw,
+    fetch_goldman,
+    fetch_google,
+    fetch_meta,
+    fetch_shopify,
+    fetch_twosigma,
+)
 from .util import FetchError, get_json, html_to_text, parse_ats_url, post_json, request, strip_tracking
 
 
@@ -34,6 +45,13 @@ def _date_from_epoch(n, ms=False) -> str:
         n = float(n) / (1000 if ms else 1)
         return dt.datetime.fromtimestamp(n, dt.timezone.utc).date().isoformat()
     except (TypeError, ValueError, OSError):
+        return ""
+
+
+def _date_from_format(value, fmt: str) -> str:
+    try:
+        return dt.datetime.strptime(str(value), fmt).date().isoformat()
+    except (TypeError, ValueError):
         return ""
 
 
@@ -201,6 +219,7 @@ def fetch_ashby(board: str, company: str) -> list[dict]:
     for j in _ashby_board(board):
         if j.get("isListed") is False:
             continue
+        postal = ((j.get("address") or {}).get("postalAddress") or {})
         out.append({
             "company": company,
             "title": (j.get("title") or "").strip(),
@@ -211,6 +230,7 @@ def fetch_ashby(board: str, company: str) -> list[dict]:
             "description": j.get("descriptionPlain") or html_to_text(j.get("descriptionHtml")),
             "season_hint": "",
             "employment_type": j.get("employmentType", ""),
+            "country": postal.get("addressCountry", ""),
         })
     return out
 
@@ -241,6 +261,7 @@ def fetch_smartrecruiters(board: str, company: str) -> list[dict]:
                 "description": "",
                 "season_hint": "",
                 "employment_type": (j.get("typeOfEmployment") or {}).get("label", ""),
+                "country": location.get("country", ""),
             })
         offset += len(batch)
         if not batch or offset >= int(data.get("totalFound") or 0):
@@ -355,6 +376,7 @@ def fetch_eightfold(
             start += len(batch)
             if not batch or start >= int(page.get("count") or 0):
                 break
+            time.sleep(0.12)
     except FetchError:
         pcsx_api = f"https://{host}/api/pcsx"
         postings.clear()
@@ -418,6 +440,173 @@ def fetch_clearcompany(site_id: str, company: str) -> list[dict]:
         page_index += 1
         if not batch or len(out) >= int(data.get("totalCount") or 0):
             return out
+
+
+# ------------------------------------------------------------ custom company sites
+
+def fetch_amazon(company: str) -> list[dict]:
+    """Amazon's public search JSON, already narrowed to United States results."""
+    out, offset, page_size = [], 0, 100
+    while True:
+        data = get_json(
+            "https://www.amazon.jobs/en/search.json?base_query=intern&"
+            f"normalized_country_code%5B%5D=USA&result_limit={page_size}&offset={offset}&sort=recent",
+            timeout=60,
+        )
+        batch = data.get("jobs") or []
+        for job in batch:
+            location = ", ".join(filter(None, [job.get("city"), job.get("state")]))
+            path = str(job.get("job_path") or "")
+            out.append({
+                "company": company,
+                "title": str(job.get("title") or "").strip(),
+                "location": location,
+                "country": job.get("country_code") or "USA",
+                "url": f"https://www.amazon.jobs{path}" if path else "",
+                "source": f"{company} careers",
+                "posted": _date_from_format(job.get("posted_date"), "%B %d, %Y"),
+                "description": "",
+                "season_hint": "",
+                "source_job_id": str(job.get("id_icims") or ""),
+            })
+        offset += len(batch)
+        if not batch or offset >= int(data.get("hits") or 0):
+            return out
+
+
+def fetch_microsoft(company: str, max_pages: int = 60) -> list[dict]:
+    """Microsoft's public Eightfold PCSX API."""
+    out, seen = [], set()
+    for term in ("intern", "internship"):
+        start = 0
+        for _ in range(max_pages):
+            data = get_json(
+                "https://apply.careers.microsoft.com/api/pcsx/search?"
+                f"domain=microsoft.com&query={quote(term)}&start={start}",
+                timeout=40,
+            )
+            page = data.get("data", data)
+            batch = page.get("positions") or []
+            for job in batch:
+                job_id = str(job.get("displayJobId") or job.get("id") or "")
+                if not job_id or job_id in seen:
+                    continue
+                seen.add(job_id)
+                locations = job.get("locations") or []
+                position_id = str(job.get("id") or "")
+                out.append({
+                    "company": company,
+                    "title": str(job.get("name") or "").strip(),
+                    "location": "; ".join(locations),
+                    "url": f"https://jobs.careers.microsoft.com/careers/job/{position_id}" if position_id else "",
+                    "source": f"{company} careers",
+                    "posted": _date_from_epoch(job.get("postedTs")),
+                    "description": "",
+                    "season_hint": "",
+                    "source_job_id": job_id,
+                    "modality": job.get("workLocationOption", ""),
+                })
+            start += len(batch)
+            if not batch or start >= int(page.get("count") or 0):
+                break
+            time.sleep(0.12)
+    return out
+
+
+def fetch_netflix(company: str) -> list[dict]:
+    return fetch_eightfold(
+        "explore.jobs.netflix.net", "netflix.com", company, query="intern", max_pages=100
+    )
+
+
+def fetch_oracle(
+    tenant: str,
+    site: str,
+    company: str,
+    max_pages: int = 30,
+    public_url_template: str = "",
+) -> list[dict]:
+    """Generic Oracle Recruiting Cloud search used by JPMorgan and others."""
+    out, page_size = [], 200
+    host = tenant if "." in tenant else f"{tenant}.fa.oraclecloud.com"
+    base = f"https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions"
+    for page_number in range(max_pages):
+        offset = page_number * page_size
+        url = (
+            f"{base}?onlyData=true&expand=requisitionList.secondaryLocations&"
+            f"finder=findReqs;siteNumber={quote(site)},keyword=internship,limit={page_size},offset={offset}"
+        )
+        data = get_json(url, timeout=60)
+        items = data.get("items") or []
+        if not items:
+            break
+        item = items[0]
+        batch = item.get("requisitionList") or []
+        for job in batch:
+            job_id = str(job.get("Id") or "")
+            out.append({
+                "company": company,
+                "title": str(job.get("Title") or "").strip(),
+                "location": str(job.get("PrimaryLocation") or ""),
+                "country": str(job.get("PrimaryLocationCountry") or ""),
+                "url": (
+                    public_url_template.format(id=job_id)
+                    if job_id and public_url_template
+                    else f"https://{host}/hcmUI/CandidateExperience/en/sites/{site}/job/{job_id}"
+                    if job_id else ""
+                ),
+                "source": f"{company} careers",
+                "posted": _date_from_iso(job.get("PostedDate")),
+                "description": "",
+                "season_hint": "",
+                "source_job_id": job_id,
+                "modality": job.get("WorkplaceType", ""),
+            })
+        if len(batch) < page_size or len(out) >= int(item.get("TotalJobsCount") or 0):
+            break
+    return out
+
+
+def fetch_sig(company: str) -> list[dict]:
+    out, page, page_size = [], 1, 100
+    while True:
+        data = get_json(
+            f"https://careers.sig.com/api/jobs?keywords=intern&page={page}&limit={page_size}",
+            timeout=60,
+        )
+        batch = data.get("jobs") or []
+        for wrapped in batch:
+            job = wrapped.get("data") or {}
+            slug = str(job.get("slug") or "")
+            categories = job.get("categories") or []
+            out.append({
+                "company": company,
+                "title": str(job.get("title") or "").strip(),
+                "location": str(job.get("full_location") or ", ".join(filter(None, [
+                    job.get("city"), job.get("state"),
+                ]))),
+                "country": str(job.get("country_code") or ""),
+                "url": f"https://careers.sig.com/jobs/{slug}" if slug else "",
+                "source": f"{company} careers",
+                "posted": _date_from_iso(job.get("posted_date")),
+                "description": html_to_text(job.get("description")),
+                "season_hint": "",
+                "source_job_id": str(job.get("req_id") or slug),
+                "employment_type": str(categories[0].get("name") if categories else ""),
+            })
+        page += 1
+        if not batch or len(out) >= int(data.get("totalCount") or 0):
+            return out
+
+
+def fetch_uber(company: str) -> list[dict]:
+    """Uber's current board is an Oracle Recruiting Cloud deployment."""
+    return fetch_oracle(
+        "iaziqy.fa.ocs.oraclecloud.com",
+        "CX_1",
+        company,
+        public_url_template="https://jobs.uber.com/en/jobs/{id}",
+    )
 
 
 # ------------------------------------------------------------ USAJOBS
@@ -515,6 +704,38 @@ def fetch_all(
     for c in cfg.get("clearcompany", []):
         add(c, "ClearCompany", "careers-api.clearcompany.com",
             lambda c=c: fetch_clearcompany(c["site_id"], c["name"]))
+    for c in cfg.get("amazon", []):
+        add(c, "Amazon", "www.amazon.jobs", lambda c=c: fetch_amazon(c["name"]))
+    for c in cfg.get("microsoft", []):
+        add(c, "Microsoft", "apply.careers.microsoft.com", lambda c=c: fetch_microsoft(c["name"]))
+    for c in cfg.get("netflix", []):
+        add(c, "Netflix", "explore.jobs.netflix.net", lambda c=c: fetch_netflix(c["name"]))
+    for c in cfg.get("oracle", []):
+        add(c, "Oracle Recruiting Cloud", f"{c['tenant']}.fa.oraclecloud.com",
+            lambda c=c: fetch_oracle(c["tenant"], c["site"], c["name"]))
+    for c in cfg.get("sig", []):
+        add(c, "SIG careers", "careers.sig.com", lambda c=c: fetch_sig(c["name"]))
+    for c in cfg.get("uber", []):
+        add(c, "Uber careers", "www.uber.com", lambda c=c: fetch_uber(c["name"]))
+    for c in cfg.get("apple", []):
+        add(c, "Apple careers", "jobs.apple.com", lambda c=c: fetch_apple(c["name"]))
+    for c in cfg.get("google", []):
+        add(c, "Google careers", "www.google.com", lambda c=c: fetch_google(c["name"]))
+    for c in cfg.get("meta", []):
+        add(c, "Meta careers", "www.metacareers.com", lambda c=c: fetch_meta(c["name"]))
+    for c in cfg.get("shopify", []):
+        add(c, "Shopify careers", "www.shopify.com", lambda c=c: fetch_shopify(c["name"]))
+    for c in cfg.get("citadel", []):
+        add(c, "Citadel careers", f"www.{c['slug']}.com",
+            lambda c=c: fetch_citadel(c["slug"], c["name"]))
+    for c in cfg.get("deshaw", []):
+        add(c, "D. E. Shaw careers", "www.deshaw.com", lambda c=c: fetch_deshaw(c["name"]))
+    for c in cfg.get("goldman", []):
+        add(c, "Goldman careers", "api-higher.gs.com", lambda c=c: fetch_goldman(c["name"]))
+    for c in cfg.get("bloomberg", []):
+        add(c, "Bloomberg careers", "bloomberg.avature.net", lambda c=c: fetch_bloomberg(c["name"]))
+    for c in cfg.get("twosigma", []):
+        add(c, "Two Sigma careers", "careers.twosigma.com", lambda c=c: fetch_twosigma(c["name"]))
     if "usajobs" in cfg:
         federal = {"name": "USAJOBS", **cfg["usajobs"]}
         add(federal, "Federal", "data.usajobs.gov", lambda: fetch_usajobs(cfg["usajobs"]))

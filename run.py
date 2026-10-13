@@ -382,7 +382,13 @@ def _deduplicate(raw_jobs: list[dict[str, Any]], scope: str) -> dict[str, dict[s
         url = str(job.get("url") or "").strip()
         if not title or not url or not is_target_job(title, scope, str(job.get("employment_type") or "")):
             continue
-        job["key"] = job_key(url, str(job.get("company") or ""), title)
+        job["key"] = job_key(
+            url,
+            str(job.get("company") or ""),
+            title,
+            source=str(job.get("source_id") or job.get("source") or ""),
+            source_job_id=str(job.get("source_job_id") or ""),
+        )
         existing = jobs.get(job["key"])
         if existing is None or (not existing.get("description") and job.get("description")):
             jobs[job["key"]] = job

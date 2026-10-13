@@ -23,8 +23,13 @@ def request(url: str, method: str = "GET", data=None, headers: dict | None = Non
         hdrs.update(headers)
     body = None
     if data is not None:
-        body = json.dumps(data).encode("utf-8")
-        hdrs["Content-Type"] = "application/json"
+        if isinstance(data, bytes):
+            body = data
+        elif isinstance(data, str):
+            body = data.encode("utf-8")
+        else:
+            body = json.dumps(data).encode("utf-8")
+            hdrs.setdefault("Content-Type", "application/json")
     last: Exception = FetchError("unknown error")
     for attempt in range(retries + 1):
         try:
@@ -36,6 +41,13 @@ def request(url: str, method: str = "GET", data=None, headers: dict | None = Non
                 return raw.decode("utf-8", "replace")
         except urllib.error.HTTPError as e:
             last = FetchError(f"HTTP {e.code}")
+            if e.code == 429 and attempt < retries:
+                try:
+                    retry_after = float(e.headers.get("Retry-After", ""))
+                except (TypeError, ValueError):
+                    retry_after = 5.0 * (attempt + 1)
+                time.sleep(min(max(retry_after, 1.0), 30.0))
+                continue
             if e.code in (400, 401, 403, 404, 405, 410, 422):
                 break  # retrying won't help
         except Exception as e:  # timeouts, DNS, bad SSL...
@@ -136,7 +148,13 @@ def parse_ats_url(url: str) -> dict | None:
     return None
 
 
-def job_key(url: str, company: str, title: str) -> str:
+def job_key(
+    url: str,
+    company: str,
+    title: str,
+    source: str = "",
+    source_job_id: str = "",
+) -> str:
     """A stable ID so the same job from two sources is only shown once."""
     info = parse_ats_url(url or "")
     if info:
@@ -148,6 +166,9 @@ def job_key(url: str, company: str, title: str) -> str:
     m = _GH_JID.search(url or "")
     if m:
         return f"gr:{m.group(1)}"
+    if source_job_id:
+        source_name = re.sub(r"[^a-z0-9]+", "-", (source or company).casefold()).strip("-")
+        return f"src:{source_name}:{str(source_job_id).casefold()}"
     clean = re.sub(r"[?#].*$", "", (url or "").strip().lower()).rstrip("/")
     clean = re.sub(r"/apply$", "", clean)
     if clean:
