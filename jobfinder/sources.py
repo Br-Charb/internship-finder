@@ -743,9 +743,11 @@ def fetch_all(
         add(c, "Bloomberg careers", "bloomberg.avature.net", lambda c=c: fetch_bloomberg(c["name"]))
     for c in cfg.get("twosigma", []):
         add(c, "Two Sigma careers", "careers.twosigma.com", lambda c=c: fetch_twosigma(c["name"]))
-    if "usajobs" in cfg:
+    if "usajobs" in cfg and os.environ.get("USAJOBS_API_KEY") and os.environ.get("USAJOBS_EMAIL"):
         federal = {"name": "USAJOBS", **cfg["usajobs"]}
         add(federal, "Federal", "data.usajobs.gov", lambda: fetch_usajobs(cfg["usajobs"]))
+    elif "usajobs" in cfg:
+        print("[skip] USAJOBS credentials are not configured")
 
     # Do not stampede a shared ATS with every company board simultaneously.
     # The short jitter also keeps scheduled invocations from always arriving on

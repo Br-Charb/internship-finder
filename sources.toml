@@ -60,12 +60,6 @@ tier = 1
 group = "ai"
 
 [[greenhouse]]
-name = "Thinking Machines Lab"
-board = "thinkingmachines"
-tier = 1
-group = "ai"
-
-[[greenhouse]]
 name = "Together AI"
 board = "togetherai"
 tier = 1
@@ -210,12 +204,6 @@ board = "voyagertechnologiesinc"
 tier = 2
 
 [[greenhouse]]
-name = "Aurora"
-board = "aurorainnovation"
-tier = 2
-group = "aero"
-
-[[greenhouse]]
 name = "Epirus"
 board = "epirus"
 tier = 2
@@ -246,12 +234,6 @@ tier = 2
 group = "ai"
 
 [[greenhouse]]
-name = "Black Forest Labs"
-board = "blackforestlabs"
-tier = 2
-group = "ai"
-
-[[greenhouse]]
 name = "Figure (robotics)"
 board = "figureai"
 tier = 2
@@ -260,12 +242,6 @@ group = "ai"
 [[greenhouse]]
 name = "SambaNova"
 board = "sambanovasystems"
-tier = 2
-group = "ai"
-
-[[greenhouse]]
-name = "World Labs"
-board = "worldlabs"
 tier = 2
 group = "ai"
 
@@ -613,12 +589,6 @@ tier = 3
 group = "aero"
 
 [[greenhouse]]
-name = "Contextual AI"
-board = "contextualai"
-tier = 3
-group = "ai"
-
-[[greenhouse]]
 name = "Imbue"
 board = "imbue"
 tier = 3
@@ -657,12 +627,6 @@ group = "fintech"
 [[greenhouse]]
 name = "Lithic"
 board = "lithic"
-tier = 3
-group = "fintech"
-
-[[greenhouse]]
-name = "Marqeta"
-board = "marqeta"
 tier = 3
 group = "fintech"
 
@@ -777,12 +741,6 @@ group = "software"
 [[greenhouse]]
 name = "Squarespace"
 board = "squarespace"
-tier = 3
-group = "software"
-
-[[greenhouse]]
-name = "Temporal"
-board = "temporaltechnologies"
 tier = 3
 group = "software"
 
@@ -938,6 +896,18 @@ tier = 1
 group = "ai"
 
 [[ashby]]
+name = "Thinking Machines Lab"
+board = "thinkingmachines"
+tier = 1
+group = "ai"
+
+[[ashby]]
+name = "Aurora"
+board = "aurora-operations-inc"
+tier = 2
+group = "aero"
+
+[[ashby]]
 name = "Skydio"
 board = "skydio"
 tier = 2
@@ -964,6 +934,12 @@ group = "ai"
 [[ashby]]
 name = "Baseten"
 board = "baseten"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Black Forest Labs"
+board = "black-forest-labs"
 tier = 2
 group = "ai"
 
@@ -1060,6 +1036,12 @@ group = "ai"
 [[ashby]]
 name = "Suno"
 board = "suno"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "World Labs"
+board = "worldlabs"
 tier = 2
 group = "ai"
 
@@ -1178,6 +1160,12 @@ tier = 3
 group = "fintech"
 
 [[ashby]]
+name = "Marqeta"
+board = "marqeta-inc"
+tier = 3
+group = "fintech"
+
+[[ashby]]
 name = "Paradigm"
 board = "paradigm"
 tier = 3
@@ -1202,12 +1190,6 @@ tier = 3
 group = "health"
 
 [[ashby]]
-name = "Cubist (Ashby board)"
-board = "cubist"
-tier = 3
-group = "quant"
-
-[[ashby]]
 name = "Benchling"
 board = "benchling"
 tier = 3
@@ -1216,6 +1198,12 @@ group = "software"
 [[ashby]]
 name = "PostHog"
 board = "posthog"
+tier = 3
+group = "software"
+
+[[ashby]]
+name = "Temporal"
+board = "temporal"
 tier = 3
 group = "software"
 
@@ -1354,7 +1342,7 @@ group = "chips"
 
 [[workday]]
 name = "Comcast/NBCU"
-host = "comcast.wd5.myworkdayjobs.com"
+host = "comcast.wd115.myworkdayjobs.com"
 site = "Comcast_Careers"
 tier = 2
 group = "entertainment"

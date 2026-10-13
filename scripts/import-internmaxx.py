@@ -60,7 +60,25 @@ CUSTOM_SECTIONS = {
 # retired endpoint.
 SOURCE_OVERRIDES: dict[str, dict[str, Any]] = {
     "fireworks ai": {"ats": "ashby", "slug": "fireworks"},
+    "aurora": {"ats": "ashby", "slug": "aurora-operations-inc"},
+    "black forest labs": {"ats": "ashby", "slug": "black-forest-labs"},
+    "marqeta": {"ats": "ashby", "slug": "marqeta-inc"},
+    "temporal": {"ats": "ashby", "slug": "temporal"},
+    "thinking machines lab": {"ats": "ashby", "slug": "thinkingmachines"},
+    "world labs": {"ats": "ashby", "slug": "worldlabs"},
+    "comcast/nbcu": {
+        "workday": {
+            "tenant": "comcast",
+            "instance": "wd115",
+            "site": "Comcast_Careers",
+        },
+    },
 }
+
+# These retired endpoints should not be restored by a later registry refresh.
+# Contextual AI currently lists no open roles, while Point72's working board
+# already covers Cubist without the obsolete standalone Ashby entry.
+DISABLED_SOURCES = {"contextual ai", "cubist (ashby board)"}
 
 
 def _split_top_level(value: str) -> list[str]:
@@ -179,7 +197,7 @@ def source_identity(section: str, entry: dict[str, Any]) -> tuple[str, ...]:
 
 
 def merge(existing: dict[str, Any], upstream: list[dict[str, Any]]) -> dict[str, Any]:
-    overridden_names = set(SOURCE_OVERRIDES)
+    overridden_names = set(SOURCE_OVERRIDES) | DISABLED_SOURCES
     result: dict[str, Any] = {
         section: [
             dict(entry)
@@ -196,6 +214,8 @@ def merge(existing: dict[str, Any], upstream: list[dict[str, Any]]) -> dict[str,
     }
 
     for company in upstream:
+        if str(company.get("name", "")).casefold() in DISABLED_SOURCES:
+            continue
         section, entry = convert_company(company)
         identity = source_identity(section, entry)
         if identity in seen:

@@ -1,3 +1,4 @@
+import os
 import unittest
 from unittest.mock import patch
 
@@ -108,6 +109,13 @@ class SourceAdapterTests(unittest.TestCase):
             observed.extend(status["name"] for status in statuses)
         self.assertEqual(sorted(entry["name"] for entry in cfg["greenhouse"]), sorted(observed))
         self.assertEqual(len(observed), len(set(observed)))
+
+    @patch.dict(os.environ, {}, clear=True)
+    @patch.object(sources, "fetch_usajobs")
+    def test_fetch_all_skips_unconfigured_usajobs(self, fetch_usajobs):
+        _, statuses = sources.fetch_all({"usajobs": {"tier": 3}})
+        self.assertEqual([], statuses)
+        fetch_usajobs.assert_not_called()
 
 
 if __name__ == "__main__":

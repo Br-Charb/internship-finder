@@ -8,12 +8,12 @@ It does not build or publish a website. Discord is the only presentation layer, 
 
 `sources.toml` is the single deployed source catalog. It currently contains:
 
-- 288 direct company career boards, including the complete supported Internmaxx company registry plus additional aerospace and defense sources
+- 286 working direct company career boards, including the supported Internmaxx company registry plus additional aerospace and defense sources
 - the Simplify internship list and a Getro job feed
 - optional USAJOBS support when API credentials are configured
 - Greenhouse, Lever, Ashby, SmartRecruiters, Rippling, Workday, Eightfold, ClearCompany, and company-specific adapters
 
-The catalog's company-sector labels currently include 69 software, 47 AI, 35 quant, 27 fintech, 23 aerospace, 17 entertainment, 16 banking, 7 chips/hardware, 4 health, 1 consulting, and 42 other direct sources. These are source-sector labels, not routing limits: every posting from every source can be routed to any of the five Discord categories.
+The catalog's company-sector labels currently include 69 software, 46 AI, 34 quant, 27 fintech, 23 aerospace, 17 entertainment, 16 banking, 7 chips/hardware, 4 health, 1 consulting, and 42 other direct sources. These are source-sector labels, not routing limits: every posting from every source can be routed to any of the five Discord categories.
 
 Tier 1 sources are checked every five minutes. Tier 2 sources are distributed across three five-minute slots, so each is checked every fifteen minutes. Tier 3 sources are distributed across twelve slots, so each is checked hourly. This avoids trying to fetch the entire catalog at once.
 
