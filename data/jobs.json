@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-13T04:09:44+00:00",
+ "updated": "2026-10-13T04:14:29+00:00",
  "jobs": [
   {
    "company": "Anduril",
@@ -32,8 +32,8 @@
      },
      {
       "text": "Must be a U.S. Person due to required access to U.S. export-controlled information or facilities; U.S. clearance eligibility may be required depending on progra",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Ability to complete an in-person 12-week internship in one of our offices in summer 2027.",
@@ -84,10 +84,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 3,
      "preferred_total": 4
     }
@@ -1656,8 +1656,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -1693,10 +1693,10 @@
      }
     ],
     "summary": {
-     "required_checked": 4,
-     "required_met": 4.0,
+     "required_checked": 5,
+     "required_met": 5.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 2,
      "preferred_total": 3
     }
@@ -2016,8 +2016,8 @@
      },
      {
       "text": "Ability to comply with applicable export-control requirements and customer-access restrictions.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -2053,10 +2053,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 3,
      "preferred_total": 4
     }
@@ -2705,8 +2705,8 @@
      },
      {
       "text": "Must be a U.S. Person due to required access to U.S. export-controlled information or facilities; U.S. clearance eligibility may be required depending on progra",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Ability to complete an in-person 16-24 -week internship in one of our offices in summer 2027.",
@@ -2757,10 +2757,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 4,
      "preferred_total": 4
     }
@@ -2845,8 +2845,8 @@
      },
      {
       "text": "This position requires ability to obtain and maintain a security clearance, which is issued by the US government. U.S citizenship is required to obtain a securi",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Transcripts required",
@@ -2856,10 +2856,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 3,
-     "required_met": 3.0,
+     "required_checked": 4,
+     "required_met": 4.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -3888,8 +3888,8 @@
      },
      {
       "text": "Must be a U.S. Person due to required access to U.S. export-controlled information or facilities; U.S. clearance eligibility may be required depending on progra",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Ability to complete an in-person 12-week internship in one of our offices in summer 2027.",
@@ -3915,10 +3915,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -4104,8 +4104,8 @@
      },
      {
       "text": "US Citizenship or Green Card",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Don't meet them all? Not a problem. Please apply even if you do not meet all these criteria.",
@@ -4136,10 +4136,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 1,
      "preferred_total": 2
     }
@@ -4528,8 +4528,8 @@
      },
      {
       "text": "Must be a U.S. Person due to required access to U.S. export-controlled information or facilities; U.S. clearance eligibility may be required depending on progra",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Ability to complete an in-person 12-week internship in one of our offices in summer 2027.",
@@ -4580,10 +4580,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 7,
      "preferred_total": 7
     }
@@ -4754,8 +4754,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in an undergraduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -4785,10 +4785,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -6947,8 +6947,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in an undergraduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -6978,10 +6978,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -7287,8 +7287,8 @@
      },
      {
       "text": "Due to the nature of this project, US Citizenship and ability to obtain a security clearance is required.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Attending a full time matriculated and nationally accredited baccalaureate or graduate program in engineering (degrees accepted: Aeronautical/Aerospace Engineer",
@@ -7307,8 +7307,8 @@
      },
      {
       "text": "Any offer of employment is conditioned upon the successful completion of a background investigation and drug screen. Due to the nature of this project, US Citiz",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -7354,10 +7354,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 4,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -7971,8 +7971,8 @@
      },
      {
       "text": "To conform to U.S. Government space technology export regulations, including the International Traffic in Arms Regulations (ITAR) you must be a U.S. citizen, la",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Passion for space, technology, and innovation.",
@@ -7982,10 +7982,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -9628,13 +9628,13 @@
      },
      {
       "text": "U.S. Person status is required, as this position needs to access export-controlled data",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "To conform to U.S. Government export regulations, you must be a (i) U.S. citizen or national, (ii) U.S. lawful, permanent resident (aka green card holder), (iii",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -9670,10 +9670,10 @@
      }
     ],
     "summary": {
-     "required_checked": 5,
-     "required_met": 5.0,
+     "required_checked": 7,
+     "required_met": 7.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 1,
      "preferred_met": 3,
      "preferred_total": 3
     }
@@ -10679,8 +10679,8 @@
      },
      {
       "text": "This position requires the ability to obtain and maintain a security clearance; which is issued by the US government. U.S citizenship is required to obtain a se",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -10691,10 +10691,10 @@
      }
     ],
     "summary": {
-     "required_checked": 3,
-     "required_met": 3.0,
+     "required_checked": 4,
+     "required_met": 4.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -10767,8 +10767,8 @@
      },
      {
       "text": "Meet Export Control compliance as a “U.S. Person” (U.S. Citizen, lawful permanent resident, refugee, or asylee).",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -10814,10 +10814,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -10894,8 +10894,8 @@
      },
      {
       "text": "Meet Export Control compliance as a “U.S. Person” (U.S. Citizen, lawful permanent resident, refugee, or asylee).",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -10941,10 +10941,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -12472,8 +12472,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor's or Advanced degree in Mechanical Engineering, Aerospace Engineering, or related Science, Technology, Engineering, or Mathematics (ST",
@@ -12493,10 +12493,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 3,
-     "required_met": 3.0,
+     "required_checked": 4,
+     "required_met": 4.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -13296,8 +13296,8 @@
      },
      {
       "text": "US Citizenship or Green Card",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Don't meet them all? Not a problem. Please apply even if you do not meet all these criteria.",
@@ -13333,10 +13333,10 @@
      }
     ],
     "summary": {
-     "required_checked": 3,
-     "required_met": 2.5,
+     "required_checked": 4,
+     "required_met": 3.5,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -13940,8 +13940,8 @@
      },
      {
       "text": "Meet Export Control compliance as a “U.S. Person” (U.S. Citizen, lawful permanent resident, refugee, or asylee).",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -13987,10 +13987,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 3,
      "preferred_total": 3
     }
@@ -14065,8 +14065,8 @@
      },
      {
       "text": "Meet Export Control compliance as a “U.S. Person” (U.S. Citizen, lawful permanent resident, refugee, or asylee).",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -14112,10 +14112,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 3,
      "preferred_total": 3
     }
@@ -14633,8 +14633,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently pursuing a Bachelor’s or Advanced degree in Manufacturing Engineering, Industrial Engineering, Mechanical Engineering, or Electrical Engineering, and ",
@@ -14654,10 +14654,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 3,
-     "required_met": 3.0,
+     "required_checked": 4,
+     "required_met": 4.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -14873,8 +14873,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "C urrently enrolled in an undergraduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -14904,10 +14904,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -14965,8 +14965,8 @@
      },
      {
       "text": "Due to the nature of our projects, US Citizenship is required.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Minimum 3.0 cumulative GPA off a 4.0 scale without rounding.",
@@ -14990,8 +14990,8 @@
      },
      {
       "text": "Any offer of employment is conditioned upon the successful completion of a background investigation and drug screen. Due to the nature of our projects, US Citiz",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -15037,10 +15037,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 4,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -15100,8 +15100,8 @@
      },
      {
       "text": "Due to the nature of our projects, US Citizenship is required.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Minimum 3.0 cumulative GPA off a 4.0 scale without rounding.",
@@ -15125,8 +15125,8 @@
      },
      {
       "text": "Any offer of employment is conditioned upon the successful completion of a background investigation and drug screen. Due to the nature of our projects, US Citiz",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -15172,10 +15172,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 4,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -15350,8 +15350,8 @@
      },
      {
       "text": "Must be a U.S. Citizen. This position may require access to systems/tools that are restricted to individuals who possess US citizenship.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Excellent verbal and written communication skills and a consistent record of collaboration, innovation, and initiative.",
@@ -15386,10 +15386,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -16885,8 +16885,8 @@
      },
      {
       "text": "Be able to obtain and maintain a U.S. Government security clearance (U.S. citizenship is a pre-requisite) as well as Program Special access within a reasonable ",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -16902,10 +16902,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -16993,8 +16993,8 @@
      },
      {
       "text": "Candidate selected may be subject to a government security investigation. You must be a U.S. citizen to apply. Employment with the Applied Research Laboratory w",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "FOR FURTHER INFORMATION on ARL, visit our web site at www.arl.psu.edu.",
@@ -17010,10 +17010,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -17524,8 +17524,8 @@
      },
      {
       "text": "Must be a U.S. Person due to required access to U.S. export-controlled information or facilities; U.S. clearance eligibility may be required depending on progra",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Ability to complete a 12-week in-person internship in one of our offices in summer 2027.",
@@ -17576,10 +17576,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 4,
      "preferred_total": 4
     }
@@ -17735,8 +17735,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in an graduate degree program and have at least one semester or quarter of school remaining after the internship.",
@@ -17802,10 +17802,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 0.0,
+     "required_checked": 2,
+     "required_met": 1.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 5,
      "preferred_total": 6
     }
@@ -17866,8 +17866,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in an undergraduate program and have at least one semester of school remaining after the internship.",
@@ -17902,10 +17902,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 3,
-     "required_met": 2.0,
+     "required_checked": 4,
+     "required_met": 3.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -18116,8 +18116,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing a Bachelor's degree or Advanced degree in Mechanical Engineering, Aerospace Engineering, Materials Engineering, Industrial or Manufacturing Eng",
@@ -18162,10 +18162,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -18221,8 +18221,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently pursuing a Bachelor’s or Advanced degree in Industrial, Mechanical, Systems, or Aerospace Engineering and actively enrolled through the completion of ",
@@ -18247,10 +18247,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 3,
-     "required_met": 3.0,
+     "required_checked": 4,
+     "required_met": 4.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -19193,8 +19193,8 @@
      },
      {
       "text": "This position requires the ability to obtain and maintain a U.S. Government Top Secret security clearance. U.S. citizenship is required to obtain a security cle",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Transcripts required",
@@ -19204,10 +19204,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -20253,8 +20253,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Work on meaningful projects that have a positive impact on our business.",
@@ -20290,10 +20290,10 @@
      }
     ],
     "summary": {
-     "required_checked": 4,
-     "required_met": 4.0,
+     "required_checked": 5,
+     "required_met": 5.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -20930,8 +20930,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in a graduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -20956,10 +20956,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 1,
-     "required_met": 0.0,
+     "required_checked": 2,
+     "required_met": 1.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -21967,8 +21967,8 @@
      },
      {
       "text": "Must be a US Citizen; this position will require a government security clearance. This position is located at a facility that requires special access",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -21999,10 +21999,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 1,
      "preferred_total": 2
     }
@@ -22248,8 +22248,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in Mechanical Engineering, Aerospace Engineering or related (STEM) major and actively enrolled through the comple",
@@ -22294,10 +22294,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 5,
-     "required_met": 3.0,
+     "required_checked": 6,
+     "required_met": 4.0,
      "required_missing": 2,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -22354,8 +22354,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in Mechanical Engineering, Aerospace Engineering or related (STEM) major and actively enrolled through the comple",
@@ -22410,10 +22410,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 6,
-     "required_met": 4.0,
+     "required_checked": 7,
+     "required_met": 5.0,
      "required_missing": 2,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -24410,8 +24410,8 @@
      },
      {
       "text": "Ability to obtain and maintain security clearance; interim required to start.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -24427,10 +24427,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -24484,8 +24484,8 @@
      },
      {
       "text": "Ability to obtain and maintain security clearance; interim required to start.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -24501,10 +24501,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -24558,8 +24558,8 @@
      },
      {
       "text": "Ability to obtain and maintain security clearance; interim required to start.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -24575,10 +24575,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -24763,8 +24763,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently pursuing a BS-level STEM degree in Industrial, Mechanical, Aerospace, or a similar engineering program through the duration of the co-op session.",
@@ -24794,10 +24794,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -24852,8 +24852,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing a Bachelor's degree or Advanced degree in Mechanical Engineering, Aerospace Engineering, Materials Engineering, Industrial or Manufacturing Eng",
@@ -24888,10 +24888,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -24945,8 +24945,8 @@
     "required": [
      {
       "text": "The ability to obtain and maintain a U.S. government issued security clearance is required.​ U.S. citizenship is required, as only U.S. citizens are eligible fo",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in a Science, Technology, Engineering Or Mathematics (STEM) major and actively enrolled through the completion of",
@@ -24996,10 +24996,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 4,
-     "required_met": 4.0,
+     "required_checked": 5,
+     "required_met": 5.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -25139,8 +25139,8 @@
     "required": [
      {
       "text": "U.S. Citizenship, U.S. Permanent Resident (Green Card holder) or asylee/refugee status as defined by 8 U.S.C. 1324b(a)(3) required.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be currently enrolled in a college or university pursuing a Bachelor’s, Master’s, or PhD in a technical or engineering major related to work assignment dur",
@@ -25196,10 +25196,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 3,
      "preferred_total": 4
     }
@@ -25254,8 +25254,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in an undergraduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -25316,10 +25316,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -25335,8 +25335,8 @@
      "label": "Summer 2027"
     },
     {
-     "kind": "info",
-     "label": "Min GPA 3.0"
+     "kind": "good",
+     "label": "Open to underclassmen"
     },
     {
      "kind": "info",
@@ -25936,8 +25936,8 @@
      },
      {
       "text": "The ability to obtain and maintain a Secret U.S. Security Clearance is required",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Prior internship or work experience in a technical or engineering role.",
@@ -25967,10 +25967,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 5,
-     "required_met": 5.0,
+     "required_checked": 6,
+     "required_met": 6.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -26168,8 +26168,8 @@
      },
      {
       "text": "Must be a U.S. Person due to required access to U.S. export-controlled information or facilities; U.S. clearance eligibility may be required depending on progra",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Ability to complete a 12-week in-person internship in one of our offices in summer 2027.",
@@ -26220,10 +26220,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 3,
      "preferred_total": 3
     }
@@ -26345,8 +26345,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in an undergraduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -26376,10 +26376,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -26788,8 +26788,8 @@
     "required": [
      {
       "text": "The ability to obtain and maintain a U.S. government issued security clearance is required.​ U.S. citizenship is required, as only U.S. citizens are eligible fo",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in Science, Technology, Engineering or Mathematics (STEM) major",
@@ -26849,10 +26849,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 3,
-     "required_met": 3.0,
+     "required_checked": 4,
+     "required_met": 4.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -26928,16 +26928,16 @@
      },
      {
       "text": "Must be a U.S. Citizen. This position may require access to systems/tools that are restricted to individuals who possess US citizenship.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -27226,8 +27226,8 @@
     "required": [
      {
       "text": "U.S. Citizenship, U.S. Permanent Resident (Green Card holder) or asylee/refugee status as defined by 8 U.S.C. 1324b(a)(3) required.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be currently enrolled in a college or university pursuing a Bachelor’s, Master’s, or PhD in a technical or engineering major related to work assignment dur",
@@ -27283,10 +27283,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 3,
      "preferred_total": 4
     }
@@ -27341,8 +27341,8 @@
     "required": [
      {
       "text": "U.S. Citizenship, U.S. Permanent Resident (Green Card holder) or asylee/refugee status as defined by 8 U.S.C. 1324b(a)(3) required.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be currently enrolled in a college or university pursuing a Bachelor’s, Master’s, or PhD in a technical or engineering major related to work assignment dur",
@@ -27398,10 +27398,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 3,
      "preferred_total": 4
     }
@@ -28109,8 +28109,8 @@
      },
      {
       "text": "U.S. Citizen",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -28141,10 +28141,10 @@
      }
     ],
     "summary": {
-     "required_checked": 3,
-     "required_met": 3.0,
+     "required_checked": 4,
+     "required_met": 4.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 1,
      "preferred_total": 2
     }
@@ -28196,8 +28196,8 @@
     "required": [
      {
       "text": "The ability to obtain and maintain a U.S. government issued security clearance is required.​ U.S. citizenship is required, as only U.S. citizens are eligible fo",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in Electrical Engineering or related Science, Technology, Engineering, or Mathematics (STEM) major and actively e",
@@ -28257,10 +28257,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 5,
-     "required_met": 4.5,
+     "required_checked": 6,
+     "required_met": 5.5,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -28318,8 +28318,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Actively pursuing a Bachelor’s degree in Industrial Engineering or a related STEM major through the completion of the internship/co-op session.",
@@ -28359,10 +28359,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -28417,8 +28417,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Actively pursuing a Bachelor’s degree in Industrial Engineering or a related STEM major through the completion of the internship/co-op session.",
@@ -28458,10 +28458,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -28516,8 +28516,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "High School Diploma or equivalent.",
@@ -28557,10 +28557,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 1.5,
+     "required_checked": 3,
+     "required_met": 2.5,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -28624,8 +28624,8 @@
      },
      {
       "text": "Must be a U.S. Person due to required access to U.S. export-controlled information or facilities; U.S. clearance eligibility may be required depending on progra",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Ability to complete an in-person 12-week internship in one of our offices in summer 2027.",
@@ -28671,10 +28671,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 1.5,
+     "required_checked": 3,
+     "required_met": 2.5,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 1,
      "preferred_total": 3
     }
@@ -28727,8 +28727,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in an undergraduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -28758,10 +28758,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -28814,8 +28814,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in graduate degree program and have at least one semester or quarter of school remaining after the internship.",
@@ -28840,10 +28840,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -29008,8 +29008,8 @@
      },
      {
       "text": "Due to the nature of our projects, US Citizenship is required.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Minimum 3.0 cumulative GPA off a 4.0 scale without rounding.",
@@ -29033,8 +29033,8 @@
      },
      {
       "text": "Any offer of employment is conditioned upon the successful completion of a background investigation and drug screen. Due to the nature of our projects, US Citiz",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -29080,10 +29080,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 4,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -29294,8 +29294,8 @@
      },
      {
       "text": "Applicant for this intern position must be a (i) U.S. citizen or national, (ii) U.S. lawful permanent resident (e.g., green card holder), (iii) Refugee under 8 ",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Able to work full time, onsite for a minimum of 12 consecutive weeks beginning in May or June 2027",
@@ -29351,10 +29351,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 2,
      "preferred_total": 3
     }
@@ -29462,8 +29462,8 @@
      },
      {
       "text": "This position requires the ability to obtain and maintain a security clearance, which is issued by the US government. U.S citizenship is required to obtain a se",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Transcripts required.",
@@ -29473,10 +29473,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 4,
-     "required_met": 3.5,
+     "required_checked": 5,
+     "required_met": 4.5,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -29591,16 +29591,16 @@
      },
      {
       "text": "This position requires the ability to obtain and maintain a security clearance, which is issued by the US government. U.S citizenship is required to obtain a se",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 4,
-     "required_met": 3.0,
+     "required_checked": 5,
+     "required_met": 4.0,
      "required_missing": 1,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -29923,8 +29923,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in an undergraduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -29949,10 +29949,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 3,
-     "required_met": 3.0,
+     "required_checked": 4,
+     "required_met": 4.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -30289,8 +30289,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in STEM or Mathematics field and actively enrolled through the completion of the internship/co-op session.",
@@ -30315,10 +30315,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -30516,8 +30516,8 @@
      },
      {
       "text": "US Citizenship or Green Card",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Don't meet them all? Not a problem. Please apply even if you do not meet all these criteria.",
@@ -30548,10 +30548,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 1.5,
+     "required_checked": 3,
+     "required_met": 2.5,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -30701,8 +30701,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in a graduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -30727,10 +30727,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 1,
-     "required_met": 0.0,
+     "required_checked": 2,
+     "required_met": 1.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -32309,8 +32309,8 @@
      },
      {
       "text": "Be able to obtain and maintain a U.S. Government security clearance (U.S. citizenship is a pre-requisite) as well as Program Special access within a reasonable ",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -32356,10 +32356,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 3,
      "preferred_total": 3
     }
@@ -32761,8 +32761,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -32783,10 +32783,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -32877,8 +32877,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -32899,10 +32899,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -32993,8 +32993,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -33015,10 +33015,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -33109,8 +33109,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -33131,10 +33131,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -33225,8 +33225,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -33247,10 +33247,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -33341,8 +33341,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -33363,10 +33363,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -33457,8 +33457,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -33479,10 +33479,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -33568,8 +33568,8 @@
      },
      {
       "text": "US Citizenship",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Scientific programming experience in Python (useful for custom requirement-analysis scripts).",
@@ -33610,10 +33610,10 @@
      }
     ],
     "summary": {
-     "required_checked": 4,
-     "required_met": 4.0,
+     "required_checked": 5,
+     "required_met": 5.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -34627,8 +34627,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in Science, Technology, Engineering or Mathematics (STEM) and actively enrolled through the completion of the int",
@@ -34653,10 +34653,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -34803,8 +34803,8 @@
      },
      {
       "text": "Ability to obtain and maintain a U.S. government issued security clearance prior to start date. U.S. citizenship is required, as only U.S. citizens are eligible",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Academic or internship experience that included hands-on testing of electronic equipment",
@@ -34840,10 +34840,10 @@
      }
     ],
     "summary": {
-     "required_checked": 5,
-     "required_met": 3.0,
+     "required_checked": 6,
+     "required_met": 4.0,
      "required_missing": 2,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -34899,8 +34899,8 @@
     "required": [
      {
       "text": "The ability to obtain and maintain a U.S. government issued security clearance is required.​ U.S. citizenship is required, as only U.S. citizens are eligible fo",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in Electrical, Aerospace or Computer Engineering and actively enrolled through the completion of the internship/c",
@@ -34930,10 +34930,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 3,
-     "required_met": 3.0,
+     "required_checked": 4,
+     "required_met": 4.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -35530,8 +35530,8 @@
      },
      {
       "text": "Applicant for this intern position must be a (i) U.S. citizen or national, (ii) U.S. lawful permanent resident (e.g., green card holder), (iii) Refugee under 8 ",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Able to work full time, onsite for a minimum of 12 consecutive weeks beginning in May or June 2027",
@@ -35567,10 +35567,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -36084,8 +36084,8 @@
      },
      {
       "text": "Must be a US Citizen; this position will require a government security clearance. This position is located at a facility that requires special access",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -36131,10 +36131,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -36528,8 +36528,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing a Bachelor’s degree in Supply Chain Management, Business, Operations Management, Industrial Engineering, or a related discipline and actively e",
@@ -36559,10 +36559,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 1.5,
+     "required_checked": 3,
+     "required_met": 2.5,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -36618,8 +36618,8 @@
     "required": [
      {
       "text": "The ability to obtain and maintain a U.S. government issued security clearance is required.​ U.S. citizenship is required, as only U.S. citizens are eligible fo",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing a Bachelor’s or Advanced degree in Science, Technology, Engineering, or Mathematics (STEM) and actively enrolled through the completion of the ",
@@ -36674,10 +36674,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 3,
-     "required_met": 3.0,
+     "required_checked": 4,
+     "required_met": 4.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -36940,8 +36940,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -36962,10 +36962,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 1.0,
+     "required_checked": 3,
+     "required_met": 2.0,
      "required_missing": 1,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -37574,8 +37574,8 @@
      },
      {
       "text": "Must be a US Citizen; this position will require a government security clearance.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -37616,10 +37616,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -37784,8 +37784,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently pursuing a Bachelor’s degree in Industrial Engineering or a related STEM field and actively enrolled through the completion of the internship/co-op se",
@@ -37815,10 +37815,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -38569,8 +38569,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in a graduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -38595,10 +38595,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 1,
-     "required_met": 0.0,
+     "required_checked": 2,
+     "required_met": 1.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -39008,8 +39008,8 @@
      },
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Basic understanding of GD&T principles",
@@ -39035,10 +39035,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 5,
+     "to_check": 4,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -39236,8 +39236,8 @@
      },
      {
       "text": "Due to the nature of our projects, US Citizenship is required.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Minimum 3.0 cumulative GPA off a 4.0 scale without rounding.",
@@ -39261,8 +39261,8 @@
      },
      {
       "text": "Any offer of employment is conditioned upon the successful completion of a background investigation and drug screen. Due to the nature of our projects, US Citiz",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -39308,10 +39308,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 4,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -40184,8 +40184,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor's or Advanced degree in Manufacturing Engineering, Project Management, Operations, Business, or related Science, Technology, Engineeri",
@@ -40210,10 +40210,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -40265,8 +40265,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Pursuing a Bachelor's or Master's degree in Aerospace, Electrical, Computer, Mechanical or Industrial Engineering and actively enrolled through the completion o",
@@ -40291,10 +40291,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -40720,8 +40720,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -40742,10 +40742,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -40836,8 +40836,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -40858,10 +40858,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -40952,8 +40952,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -40974,10 +40974,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -41068,8 +41068,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -41090,10 +41090,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -42528,43 +42528,6 @@
    "last_seen": "2026-10-13"
   },
   {
-   "company": "Motorola",
-   "title": "FPGA Design Engineering Intern",
-   "location": "Schaumburg, IL",
-   "url": "https://motorolasolutions.wd5.myworkdayjobs.com/Careers/job/Schaumburg-IL/FPGA-Design-Engineering-Intern---Summer-2027_R68401",
-   "source": "Simplify Summer 2027 list",
-   "posted": "2026-09-09",
-   "sponsorship": "Other",
-   "source_id": "Simplify Summer 2027 list",
-   "key": "wd:motorolasolutions:r68401",
-   "score": 51,
-   "tier": "look",
-   "parts": {
-    "aerospace": 14,
-    "skills": 12,
-    "eligibility": 25,
-    "requirements": 0
-   },
-   "quals": null,
-   "matched": [],
-   "related": [],
-   "gaps": [],
-   "flags": [
-    {
-     "kind": "good",
-     "label": "Summer 2027"
-    },
-    {
-     "kind": "info",
-     "label": "Full description not loaded"
-    }
-   ],
-   "season": "match",
-   "has_description": false,
-   "first_seen": "2026-10-11",
-   "last_seen": "2026-10-13"
-  },
-  {
    "company": "NVIDIA",
    "title": "Research Intern - Electronic Design Automation",
    "location": "Santa Clara, CA",
@@ -43409,8 +43372,8 @@
      },
      {
       "text": "Applicant for this intern position must be a (i) U.S. citizen or national, (ii) U.S. lawful permanent resident (e.g., green card holder), (iii) Refugee under 8 ",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Able to work full time, onsite for a minimum of 12 consecutive weeks beginning in May or June 2027",
@@ -43461,10 +43424,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -44074,8 +44037,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in an undergraduate degree program and have at least one semester or quarter of school remaining after the internship.",
@@ -44105,10 +44068,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -44167,8 +44130,8 @@
      },
      {
       "text": "Eligible for North Atlantic Treaty Organization (NATO) Secret clearance in a timely manner",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Working knowledge of Microsoft (MS) Suite including Word, Excel, PowerPoint, and Visio",
@@ -44229,10 +44192,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 4,
+     "to_check": 3,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -44284,8 +44247,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "C urrently enrolled in an undergraduate program and have at least one semester or quarter of school remaining after the internship.",
@@ -44315,10 +44278,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -44936,8 +44899,8 @@
      },
      {
       "text": "Must be a US Citizen; this position will require a government security clearance. This position is located at a facility that requires special access.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -44968,10 +44931,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 0.0,
+     "required_checked": 2,
+     "required_met": 1.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 1,
      "preferred_total": 2
     }
@@ -45285,8 +45248,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in Mechanical, Aerospace Engineering, Business Analytics or related Science, Technology, Engineering or Mathemati",
@@ -45332,10 +45295,10 @@
      }
     ],
     "summary": {
-     "required_checked": 4,
-     "required_met": 3.0,
+     "required_checked": 5,
+     "required_met": 4.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -46253,8 +46216,8 @@
     "required": [
      {
       "text": "The ability to obtain and maintain a U.S. government issued security clearance is required.​ U.S. citizenship is required, as only U.S. citizens are eligible fo",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing a Bachelor’s or graduate degree in Electrical Engineering or related Science, Technology, Engineering or Mathematics (STEM) major.",
@@ -46294,10 +46257,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 3,
-     "required_met": 2.0,
+     "required_checked": 4,
+     "required_met": 3.0,
      "required_missing": 1,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -46369,8 +46332,8 @@
      },
      {
       "text": "Must be a U.S. Citizen. This position may require access to systems/tools that are restricted to individuals who possess US citizenship.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Minimum GPA of 3.0",
@@ -46401,10 +46364,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 4,
+     "to_check": 3,
      "preferred_met": 1,
      "preferred_total": 2
     }
@@ -46692,8 +46655,8 @@
      },
      {
       "text": "Due to federal regulations (e.g., ITAR/EAR), applicants must be U.S. citizens or lawful permanent residents (e.g., current Green Card holders)",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Able to work full-time (40 hours per week) for a minimum of 12 weeks beginning May 2027",
@@ -46749,10 +46712,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -46895,8 +46858,8 @@
      },
      {
       "text": "Must be a U.S. Person due to required access to U.S. export-controlled information or facilities; U.S. clearance eligibility may be required depending on progra",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Ability to complete a 12-week in-person internship in one of our offices in summer 2027.",
@@ -46932,10 +46895,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 1.5,
+     "required_checked": 3,
+     "required_met": 2.5,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 2
     }
@@ -47057,8 +47020,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in a graduate degree program and have at least one semester or quarter of school remaining after the internship.",
@@ -47114,10 +47077,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 0.0,
+     "required_checked": 2,
+     "required_met": 1.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -47573,8 +47536,8 @@
      },
      {
       "text": "Eligible for North Atlantic Treaty Organization (NATO) Secret, International Traffic in Arms Regulations (ITAR), and Foreign Military Sales (FMS) clearances in ",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -47595,10 +47558,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 1
     }
@@ -47670,8 +47633,8 @@
      },
      {
       "text": "Must be able to obtain North Atlantic Treaty Organization (NATO) Secret security clearance in a timely manner.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -47687,10 +47650,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -48126,8 +48089,8 @@
     "required": [
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Currently enrolled in a graduate degree program and have at least one semester or quarter of school remaining after the internship.",
@@ -48152,10 +48115,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 1,
-     "required_met": 0.0,
+     "required_checked": 2,
+     "required_met": 1.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -48326,8 +48289,8 @@
      },
      {
       "text": "Be able to obtain and maintain a U.S. Government security clearance (U.S. citizenship is a pre-requisite) as well as Program Special access within a reasonable ",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -48343,10 +48306,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -48508,6 +48471,79 @@
    "last_seen": "2026-10-13"
   },
   {
+   "company": "Motorola",
+   "title": "FPGA Design Engineering Intern",
+   "location": "Schaumburg, IL",
+   "url": "https://motorolasolutions.wd5.myworkdayjobs.com/Careers/job/Schaumburg-IL/FPGA-Design-Engineering-Intern---Summer-2027_R68401",
+   "source": "Simplify Summer 2027 list",
+   "posted": "2026-09-09",
+   "sponsorship": "Other",
+   "source_id": "Simplify Summer 2027 list",
+   "key": "wd:motorolasolutions:r68401",
+   "score": 44,
+   "tier": "look",
+   "parts": {
+    "aerospace": 14,
+    "skills": 10,
+    "eligibility": 25,
+    "requirements": -5
+   },
+   "quals": {
+    "required": [
+     {
+      "text": "Pursuing a Bachelor's degree in Computer Engineering",
+      "status": "missing",
+      "why": "Wants a different major"
+     },
+     {
+      "text": "Must graduate date on or after December 2027",
+      "status": "met",
+      "why": "Grad date rule (2027) fits your 2029"
+     },
+     {
+      "text": "Must be a US Citizen, permanent resident, or an MS student with work authorization (F1 Visa on CPT accepted only for master 's-level students)",
+      "status": "met",
+      "why": "You're a U.S. citizen"
+     }
+    ],
+    "preferred": [],
+    "summary": {
+     "required_checked": 3,
+     "required_met": 2.0,
+     "required_missing": 1,
+     "to_check": 0,
+     "preferred_met": 0,
+     "preferred_total": 0
+    }
+   },
+   "matched": [
+    "Python"
+   ],
+   "related": [
+    "C (close to C++)"
+   ],
+   "gaps": [],
+   "flags": [
+    {
+     "kind": "good",
+     "label": "Summer 2027"
+    },
+    {
+     "kind": "good",
+     "label": "Grad window 2027 fits"
+    },
+    {
+     "kind": "info",
+     "label": "U.S. person / ITAR",
+     "id": "citizen"
+    }
+   ],
+   "season": "match",
+   "has_description": true,
+   "first_seen": "2026-10-11",
+   "last_seen": "2026-10-13"
+  },
+  {
    "company": "RTX",
    "title": "Digital Design Electrical Engineer Intern - Summer 2027",
    "location": "Tucson, AZ",
@@ -48616,8 +48652,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in Electrical Engineering or related Science, Technology, Engineering, or Mathematics (STEM) major and actively e",
@@ -48631,8 +48667,8 @@
      },
      {
       "text": "The ability to obtain and maintain a U.S. government issued security clearance is required. U.S. citizenship is required, as only U.S. citizens are eligible for",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "​ This position requires experience with any of the following: RF, analog, digital, and / or mixed signal circuit design or analysis and / or digital signal pro",
@@ -48667,10 +48703,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 4,
-     "required_met": 3.0,
+     "required_checked": 6,
+     "required_met": 5.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -48750,8 +48786,8 @@
      },
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Prior RTX internship, co-op, or work experience.",
@@ -48776,10 +48812,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -48869,8 +48905,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -48891,10 +48927,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -48985,8 +49021,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -49007,10 +49043,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -49101,8 +49137,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -49123,10 +49159,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -49217,8 +49253,8 @@
      },
      {
       "text": "Must be a U.S. citizen or national, U.S. permanent resident (current Green Card holder), or lawfully admitted into the U.S. as a refugee or granted asylum.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -49239,10 +49275,10 @@
      }
     ],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 2,
      "preferred_total": 2
     }
@@ -49464,8 +49500,8 @@
      },
      {
       "text": "U.S. Citizenship and the ability to obtain and maintain a Top Secret Clearance",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -49491,10 +49527,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 0.0,
+     "required_checked": 2,
+     "required_met": 1.0,
      "required_missing": 1,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 2
     }
@@ -49650,8 +49686,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Actively pursuing or holding a Bachelor’s degree in Supply Chain, Engineering, Operations, or Technology and enrolled through the completion of the internship s",
@@ -49676,10 +49712,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 2,
+     "to_check": 1,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -50406,8 +50442,8 @@
      },
      {
       "text": "Must be a US Citizen, eligible for a government security clearance.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -50433,10 +50469,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 1,
      "preferred_total": 1
     }
@@ -50488,8 +50524,8 @@
     "required": [
      {
       "text": "The ability to obtain and maintain a U.S. government issued security clearance is required.​ U.S. citizenship is required, as only U.S. citizens are eligible fo",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in Electrical or related Science, Technology, Engineering or Mathematics (STEM) and actively enrolled through the",
@@ -50524,10 +50560,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -50579,8 +50615,8 @@
     "required": [
      {
       "text": "U.S. citizenship is required, as only U.S. citizens are authorized to access information under this program/contract.",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      },
      {
       "text": "Must be pursuing Bachelor’s or Advanced degree in Electrical Engineering and actively enrolled through the completion of the internship/co-op session.",
@@ -50620,10 +50656,10 @@
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 4,
-     "required_met": 2.0,
+     "required_checked": 5,
+     "required_met": 3.0,
      "required_missing": 2,
-     "to_check": 1,
+     "to_check": 0,
      "preferred_met": 0,
      "preferred_total": 0
     }
@@ -50838,8 +50874,8 @@
      },
      {
       "text": "Must be a US Citizen.; This position will require a government security clearance.; This position is located at a facility that requires special access",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [
@@ -50870,10 +50906,10 @@
      }
     ],
     "summary": {
-     "required_checked": 1,
-     "required_met": 1.0,
+     "required_checked": 2,
+     "required_met": 2.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 2
     }
@@ -50981,16 +51017,16 @@
      },
      {
       "text": "This position requires ability to obtain and maintain a security clearance, which is issued by the US government. U.S citizenship is required to obtain a securi",
-      "status": "check",
-      "why": "U.S. citizenship / U.S. person (set us_citizen in profile.toml)"
+      "status": "met",
+      "why": "You're a U.S. citizen"
      }
     ],
     "preferred": [],
     "summary": {
-     "required_checked": 2,
-     "required_met": 2.0,
+     "required_checked": 3,
+     "required_met": 3.0,
      "required_missing": 0,
-     "to_check": 3,
+     "to_check": 2,
      "preferred_met": 0,
      "preferred_total": 0
     }

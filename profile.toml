@@ -14,7 +14,7 @@ gpa = 0.0
 # Most aerospace/defense internships require U.S. citizenship (ITAR) or a
 # clearance. Set this to true or false so those requirements get checked;
 # leave it commented out and they show as "confirm".
-# us_citizen = true
+us_citizen = true
 
 [search]
 # The season you're hunting for. Postings that clearly name a different
