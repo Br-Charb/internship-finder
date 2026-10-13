@@ -431,7 +431,11 @@ def test_webhooks() -> dict[str, Any]:
             "url": "https://github.com/Br-Charb/internship-finder",
             "source": "Manual Lambda connection test",
             "posted": _utc_now().date().isoformat(),
-            "description": "Requirements:\n- No action needed; this is only a webhook connection test.",
+            "description": (
+                "Requirements:\n"
+                "- No action needed; this is only a webhook connection test.\n"
+                "- Sample candidates should graduate between December 2027 and June 2028."
+            ),
         }
         try:
             post_to_discord(urls[category.key], discord_payload(job, category, ["connection test"]))
@@ -441,7 +445,11 @@ def test_webhooks() -> dict[str, Any]:
 
     if failures:
         raise RuntimeError("Webhook test failures: " + "; ".join(failures))
-    return {"webhook_tests_sent": sent, "count": len(sent)}
+    return {
+        "webhook_tests_sent": sent,
+        "count": len(sent),
+        "sample_graduation": "Dec 2027 – Jun 2028",
+    }
 
 
 def _health_payload(title: str, description: str, color: int) -> dict[str, Any]:

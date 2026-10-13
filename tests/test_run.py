@@ -174,6 +174,13 @@ class ExecutionTests(unittest.TestCase):
             summary = run.lambda_handler({"test_webhooks": True}, None)
         self.assertEqual(5, summary["count"])
         self.assertEqual(5, post.call_count)
+        self.assertEqual("Dec 2027 – Jun 2028", summary["sample_graduation"])
+        for call in post.call_args_list:
+            fields = {
+                field["name"]: field["value"]
+                for field in call.args[1]["embeds"][0]["fields"]
+            }
+            self.assertEqual("Dec 2027 – Jun 2028", fields["Graduation"])
 
     def test_five_minute_slot(self):
         top_of_hour = dt.datetime(2026, 1, 1, 0, 0, tzinfo=dt.timezone.utc)
