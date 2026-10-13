@@ -1,124 +1,207 @@
-# Aero Job Finder
+# Internship Finder: AWS Lambda to Discord
 
-Every morning this repo scans company career sites and internship lists for
-**Summer 2027 aerospace engineering internships**, scores each one against
-my resume, and publishes the results to a page I can open on my phone.
+This project scans every ATS endpoint in `sources.toml`, keeps only internship/co-op/student roles, assigns one primary discipline, and posts each new match to one of five Discord channels. It runs as an AWS Lambda function on an Amazon EventBridge Scheduler `rate(5 minutes)` schedule.
 
-**Job page:** https://jonasagront.github.io/aero-job-finder/
+It does not build or publish a website. DynamoDB is the durable source of truth for jobs already sent.
 
-## Today's top matches
+## How it works
 
-<!-- JOBS:START -->
-**606 matches** as of Oct 13, 2026. Full list with filters: **[open the job page](https://jonasagront.github.io/aero-job-finder/)**
+1. `jobfinder/sources.py` normalizes Greenhouse, Lever, Ashby, SmartRecruiters, Rippling, Workday, Eightfold, ClearCompany, Getro, GitHub-list, and USAJOBS results.
+2. `jobfinder/match.py` filters internship-style titles, scores expanded discipline keywords, selects one primary category, extracts a requirements snippet, and conservatively detects explicit graduation dates/ranges.
+3. `run.py` removes duplicate job IDs, ignores IDs already in DynamoDB, atomically claims each new match, and sends a Discord embed.
+4. A successful webhook call changes the DynamoDB record to `delivered`. A failed call releases its claim so the next invocation retries it.
 
-Showing postings from the last 30 days. 262 older ones are in their own section on the page.
+Sources can have `tier = 1`, `2`, or `3` in `sources.toml`. Tier 1 is checked every five minutes, tier 2 about every fifteen minutes, and tier 3 about hourly. Greenhouse descriptions are fetched only for unseen internship candidates, shared ATS hosts are throttled, and unchanged GitHub list revisions are skipped using revision metadata in DynamoDB.
 
-| Fit | Company | Role | Required quals met | Location | Posted | Apply |
-|---|---|---|---|---|---|---|
-| 100 | Anduril | 2027 Flight Software Engineer Intern | 3 of 3 | Costa Mesa, California, United States | 2026-09-15 | [Apply](https://boards.greenhouse.io/andurilindustries/jobs/5239083007?gh_jid=5239083007) |
-| 100 | Varda Space | Structures Engineering Internship - Summer 2027 | 2 of 2 | El Segundo, California, United States | 2026-10-01 | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010167003) |
-| 100 | Varda Space | Mechanisms & Payload Internship - Summer 2027 | 2 of 2 | El Segundo, California, United States | 2026-10-01 | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010168003) |
-| 98 | Rocket Lab | Propulsion Analyst Intern Summer 2027 | 2 of 2 | Long Beach, CA | 2026-09-16 | [Apply](https://job-boards.greenhouse.io/rocketlab/jobs/7986820003) |
-| 98 | Varda Space | Thermal Engineering Internship - Summer 2027 | 5 of 5 | El Segundo, California, United States | 2026-10-01 | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010172003) |
-| 98 | Varda Space | Vehicle Integration & Test Internship - Summer 2027 | 2 of 2 | El Segundo, California, United States | 2026-10-01 | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010170003) |
-| 97 | CesiumAstro | Summer 2027 - Mechanical Engineering Internship 🆕 | 2 of 2 | Austin, TX | 2026-09-16 | [Apply](https://jobs.lever.co/CesiumAstro/042f3a1d-5fc1-44ef-8f12-57044eaa4db2) |
-| 97 | CesiumAstro | Summer 2027 - Mechanical Engineering Internship 🆕 | 2 of 2 | Westminster, CO | 2026-09-16 | [Apply](https://jobs.lever.co/CesiumAstro/c7217acc-8eb4-4431-9e90-f426ccca8d1f) |
-| 97 | GE Aerospace | Thermal Systems Design Engineering Intern (6 Months) 🆕 | 3 of 3 | Istanbul | 2026-10-12 | [Apply](https://geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite/job/Istanbul/Thermal-Systems-Design-Engineering-Intern--6-Months-_R5039995-1) |
-| 97 | GE Aerospace | Thermal Systems Design Engineering Intern (6 Months) | 3 of 3 | Istanbul | 2026-10-05 | [Apply](https://geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite/job/Istanbul/Thermal-Systems-Design-Engineering-Intern--6-Months-_R5039990-1) |
-| 95 | Muon Space | Flight Software Engineering Intern (Summer 2027) | 1 of 1 | San Jose, CA | 2026-09-30 | [Apply](https://job-boards.greenhouse.io/muonspace/jobs/5247725007) |
-| 95 | Varda Space | Guidance, Navigation & Controls (GNC) Internship - Summer 2027 | 2 of 3 | El Segundo, California, United States | 2026-10-01 | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/7865601003) |
-| 95 | Zipline | Flight Test Engineer Intern (Summer 2027) | 1 of 1 | South San Francisco, California, USA | 2026-09-21 | [Apply](https://www.zipline.com/open-roles/7999924003?gh_jid=7999924003) |
-| 94 | Anduril | Winter 2027 Manufacturing Engineer Co-op | 3 of 3 | Ashville, Ohio, United States; Lexington | 2026-09-15 | [Apply](https://boards.greenhouse.io/andurilindustries/jobs/5236589007?gh_jid=5236589007) |
-| 94 | The Aerospace Corporation | 2027 Space Vehicle and Ground Systems Undergraduate Intern | 4 of 4 | 2 Locations | 2026-10-07 | [Apply](https://aero.wd5.myworkdayjobs.com/External/job/El-Segundo-CA/XMLNAME-2027-Space-Vehicle-and-Ground-Systems-Undergraduate-Intern_R016691) |
-| 93 | AeroVironment | Mechanical Engineering Intern | 4 of 4 | Petaluma, CA | 2026-10-07 | [Apply](https://avav.wd1.myworkdayjobs.com/AVAV/job/Petaluma-CA/Mechanical-Engineering-Intern_9038) |
-| 93 | Boeing | Aerodynamics Engineering Intern- Summer 2027 | – | GBR - Farnborough, UK | 2026-09-14 | [Apply](https://boeing.wd1.myworkdayjobs.com/EXTERNAL_CAREERS/job/GBR---Farnborough-UK/Aerodynamics-Engineering-Intern--Summer-2027_JR2026519329) |
-| 93 | Varda Space | Aerodynamics & Analysis Engineering Internship - Summer 2027 | 3 of 4 | El Segundo, California, United States | 2026-10-01 | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010632003) |
-| 92 | Voyager Technologies | 2027 Mechanical Engineering Intern | 1 of 1 | Long Beach  | 2026-09-28 | [Apply](https://job-boards.greenhouse.io/voyagertechnologiesinc/jobs/4423308009) |
-| 91 | Astranis | Thermal Intern (Summer 2027) | 3 of 3 | San Francisco | 2026-09-24 | [Apply](https://job-boards.greenhouse.io/astranis/jobs/4704820006) |
-| 91 | Astranis | Assembly, Integration, and Test Intern (Summer 2027) | 2 of 2 | San Francisco | 2026-09-21 | [Apply](https://job-boards.greenhouse.io/astranis/jobs/4704761006) |
-| 91 | Astranis | Propulsion Manufacturing Intern (Summer 2027) | 3 of 3 | San Francisco | 2026-09-18 | [Apply](https://job-boards.greenhouse.io/astranis/jobs/4705648006) |
-| 90 | Antares | Manufacturing Engineering Intern - Summer 2027 🆕 | 3 of 3 | Los Angeles | 2026-09-14 | [Apply](https://jobs.ashbyhq.com/Antares/d953d3f2-0ca8-4f13-ae88-4d0eb714e851) |
-| 90 | Muon Space | Environmental Test Engineering Intern (Summer 2027) | 3 of 3 | San Jose, CA | 2026-10-02 | [Apply](https://job-boards.greenhouse.io/muonspace/jobs/5256286007) |
-| 90 | Varda Space | Manufacturing Engineering Internship - Summer 2027 | 2 of 2 | El Segundo, California, United States | 2026-10-01 | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010166003) |
-<!-- JOBS:END -->
+The five categories and environment variables are:
 
----
-
-## One-time setup (about 10 minutes)
-
-### 1. Upload the files
-1. Unzip `aero-job-finder.zip` on your computer.
-2. Open https://github.com/jonasagront/aero-job-finder and click **uploading an existing file**
-   (or **Add file → Upload files**).
-3. Open the unzipped folder, select **everything inside it**, and drag it onto the page.
-   - **On a Mac:** the `.github` folder is hidden. In Finder press **Cmd + Shift + .**
-     (period) to show it, then select everything.
-4. Click **Commit changes**.
-5. Check that the repo now shows a `.github` folder. If it doesn't, click
-   **Add file → Create new file**, type `.github/workflows/daily.yml` as the name
-   (the slashes create the folders), paste in the contents of that file from the zip,
-   and click **Commit changes**.
-
-### 2. Turn on the job page
-1. In the repo, go to **Settings → Pages**.
-2. Under **Build and deployment**, set **Source** to **Deploy from a branch**.
-3. Set the branch to **main** and the folder to **/docs**, then click **Save**.
-
-### 3. Run the first scan
-1. Go to the **Actions** tab. If GitHub asks, click **I understand my workflows, go ahead and enable them**.
-2. Click **Daily job scan** on the left, then **Run workflow → Run workflow**.
-3. Wait about 5 minutes for a green check mark. Your page updates a minute or two after that.
-
-From then on it runs by itself every morning.
-
----
-
-## Optional upgrades
-
-Add these under **Settings → Secrets and variables → Actions → New repository secret**.
-Secrets stay private even though the repo is public.
-
-| Secret | What it adds | Where to get it |
-|---|---|---|
-| `USAJOBS_API_KEY` and `USAJOBS_EMAIL` | Federal student jobs (Air Force, Navy, Army, NASA, DoD) | Free at https://developer.usajobs.gov/apirequest/ (use the same email for both) |
-| `ANTHROPIC_API_KEY` | Claude writes a one-sentence fit review and a "lead with this" tip for top matches | https://console.anthropic.com (pay-as-you-go, about 20 reviews a day by default) |
-
----
-
-## How the score works (out of 100)
-
-- **Aerospace, up to 40.** Words in the title and description (propulsion, structures,
-  CFD, composites, flight test...), majors listed (Aerospace Engineering earns the most), and
-  whether the company is an aerospace company.
-- **Your skills, up to 35.** How many of my resume skills the posting asks for, weighted by
-  how strong each one is. Close substitutes (NX instead of SolidWorks, Fluent instead of
-  STAR-CCM+) get half credit.
-- **Eligibility, up to 25.** Points come off for graduation windows that don't include
-  2029, senior-only or grad-student-only roles, a GPA minimum (if a GPA is set), or a
-  posting that never says what season it's for.
-
-Fit labels: **Strong fit** 72+, **Good fit** 56 to 71, **Worth a look** 40 to 55.
-Anything below 40 is hidden.
-
-Tags like **U.S. person / ITAR** and **Clearance** are shown so I can filter quickly;
-they don't change the score.
-
-## Tuning it
-
-- **`profile.toml`**: my skills, the aerospace keywords, titles to skip, the minimum score.
-  Add a skill when I learn one (MATLAB next!) and future scores pick it up.
-- **`sources.toml`**: which companies and lists get checked. The bottom of the job page
-  shows which sources worked on the last run, so I know what to fix or remove.
-
-## Files
-
-| Path | What it is |
+| Category | Lambda environment variable |
 |---|---|
-| `run.py` | Runs the whole scan |
-| `jobfinder/` | Fetching, scoring, and page-building code |
-| `docs/index.html` | The job page (rebuilt every run) |
-| `data/` | Saved results so the page knows what's new |
-| `.github/workflows/daily.yml` | The daily schedule |
+| Software Engineering | `DISCORD_WEBHOOK_SOFTWARE` |
+| Hardware / Embedded / Computer Engineering | `DISCORD_WEBHOOK_HARDWARE` |
+| Mechanical Engineering | `DISCORD_WEBHOOK_MECHANICAL` |
+| Aerospace Engineering | `DISCORD_WEBHOOK_AEROSPACE` |
+| Finance / Info Systems / FinTech | `DISCORD_WEBHOOK_FINANCE` |
 
-**Note:** GitHub pauses scheduled runs in repos with no activity for 60 days. If that ever
-happens, GitHub emails you; open the Actions tab and re-enable the workflow.
+## 1. Create the Discord webhooks
+
+For each destination channel in Discord:
+
+1. Open **Edit Channel → Integrations → Webhooks**.
+2. Choose **New Webhook**, give it a useful name, and select the channel.
+3. Choose **Copy Webhook URL**.
+4. Keep each URL private. Anyone with it can post to that channel.
+
+## 2. Create the DynamoDB state table
+
+Create the table in the same AWS Region you will use for Lambda:
+
+1. Open **AWS Console → DynamoDB → Tables → Create table**.
+2. Set **Table name** to `internship-finder-seen`.
+3. Set **Partition key** to `job_id`, type **String**. Do not add a sort key.
+4. Under table settings, choose **Customize settings**.
+5. Select **Provisioned** capacity and set both read and write capacity to `5`. Disable auto scaling if the console offers it; fixed 5/5 is ample for this workload.
+6. Keep the default encryption and choose **Create table**.
+
+DynamoDB's always-free allowance currently includes 25 GB plus 25 provisioned read and 25 provisioned write capacity units. A 5/5 table fits within that allowance as long as other tables in the account do not consume it.
+
+## 3. Package the Lambda code
+
+Requirements: Python 3.13 and PowerShell.
+
+From the repository root, run:
+
+```powershell
+python -m unittest discover -s tests -v
+.\scripts\package-lambda.ps1
+```
+
+For a read-only live endpoint check before packaging, run:
+
+```powershell
+python verify.py --only "SpaceX" --only "Canva" --only "Rippling"
+```
+
+This command does not access DynamoDB and cannot post to Discord. A source marked `ok` returned a valid response; a source marked `ERR` needs its URL/board identifier updated. An `ok` source with zero jobs is reachable but simply has no public postings at that moment.
+
+The script creates `internship-finder-lambda.zip`. Its root contains `run.py`, `sources.toml`, and the `jobfinder` package. AWS's managed Python runtime supplies `boto3`, so this project has no third-party package to install. Do not zip the repository's parent folder; `run.py` must be at the ZIP root.
+
+## 4. Create and configure the Lambda function
+
+1. Open **AWS Console → Lambda → Functions → Create function**.
+2. Choose **Author from scratch**.
+3. Name it `internship-finder`.
+4. Select the **Python 3.13** runtime and `x86_64` architecture.
+5. Choose **Create a new role with basic Lambda permissions**, then create the function.
+6. On the **Code** tab choose **Upload from → .zip file**, upload `internship-finder-lambda.zip`, and save.
+7. Open **Runtime settings → Edit** and set the handler to `run.lambda_handler`.
+8. Open **Configuration → General configuration → Edit**. Set memory to `256 MB` and timeout to `15 min`, then save. Increase memory if CloudWatch shows the scan is consistently slow.
+9. Do not attach the function to a VPC unless that VPC has internet egress/NAT. The scraper and Discord webhook both require public HTTPS access.
+
+### Add the environment variables
+
+Under **Configuration → Environment variables → Edit**, add:
+
+```text
+DYNAMODB_TABLE=internship-finder-seen
+DISCORD_WEBHOOK_SOFTWARE=<software channel URL>
+DISCORD_WEBHOOK_HARDWARE=<hardware channel URL>
+DISCORD_WEBHOOK_MECHANICAL=<mechanical channel URL>
+DISCORD_WEBHOOK_AEROSPACE=<aerospace channel URL>
+DISCORD_WEBHOOK_FINANCE=<finance channel URL>
+```
+
+Optional variables:
+
+| Name | Default | Purpose |
+|---|---:|---|
+| `JOB_SCOPE` | `internships` | Set to `all` to include non-internship jobs. |
+| `MAX_DESCRIPTION_LOOKUPS` | `100` | Maximum missing ATS descriptions fetched per invocation. |
+| `MAX_JOBS_PER_RUN` | `40` | Notification cap; overflow remains unseen and is sent on later runs. |
+| `USAJOBS_API_KEY` | none | Enables USAJOBS when paired with `USAJOBS_EMAIL`. |
+| `USAJOBS_EMAIL` | none | Email registered for the USAJOBS API key. |
+| `GITHUB_TOKEN` | none | Optional. Raises the GitHub API rate limit for unchanged-list revision checks. No repository write permission is needed. |
+
+Lambda encrypts environment variables at rest, but users who can view the function configuration may be able to read them. Restrict IAM access to the function.
+
+### Grant DynamoDB access
+
+1. In Lambda, open **Configuration → Permissions**.
+2. Select the execution role name to open it in IAM.
+3. Choose **Add permissions → Create inline policy → JSON**.
+4. Paste the policy below, replacing `REGION` and `ACCOUNT_ID` with the table's Region and your 12-digit AWS account ID:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "InternshipFinderState",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:REGION:ACCOUNT_ID:table/internship-finder-seen"
+    }
+  ]
+}
+```
+
+5. Choose **Next**, name it `InternshipFinderDynamoState`, and create the policy.
+
+The basic Lambda role already supplies CloudWatch Logs permissions.
+
+## 5. Seed the initial state and test
+
+Without a baseline, the first normal run treats every current posting as new. To start with only jobs discovered after deployment:
+
+1. Open the Lambda **Test** tab and create an event named `seed-current-jobs`.
+2. Use this JSON:
+
+```json
+{
+  "seed_only": true
+}
+```
+
+3. Run the test once. It records all currently categorized postings in DynamoDB without calling Discord.
+4. Confirm the returned summary has a nonzero `seeded` value. A source can appear in `failed_sources` without aborting the scan; for example, USAJOBS is skipped until its two credentials exist.
+5. Change the test event to `{}` and run it again. Normally it delivers zero because the current jobs are now seeded. Check **Monitor → View CloudWatch logs** for the full summary.
+
+If you want all currently open jobs posted to Discord, skip the seed event. The notification cap sends the backlog over multiple invocations.
+
+## 6. Add the EventBridge five-minute trigger
+
+1. On the Lambda function page, choose **Add trigger**.
+2. Select **EventBridge Scheduler** (shown as **Scheduler** in some console views).
+3. Set a schedule name such as `internship-finder-every-5-minutes` and use the `default` schedule group.
+4. Select **Recurring schedule** and enter `rate(5 minutes)`.
+5. Use `{}` as the JSON payload. Do not use the `seed_only` payload for the recurring schedule.
+6. Turn **Flexible time window** off if that option is shown.
+7. Choose **Create a new role for this schedule**, give the role a name, and choose **Add**.
+8. In **EventBridge Scheduler → Schedules**, verify the schedule is **Enabled**.
+
+EventBridge Scheduler invokes Lambda asynchronously. Confirm operation after five minutes in the Lambda CloudWatch log stream and in the DynamoDB table.
+
+At a five-minute interval there are about 8,640 scheduled invocations in a 30-day month, well below the current EventBridge Scheduler and Lambda request free allowances. Lambda's compute allowance is duration-based: at 256 MB, 400,000 GB-seconds covers about 185 seconds per invocation at this frequency. Monitor **Billing → Free Tier** and the Lambda `Duration` metric because unusually slow ATS endpoints, other workloads in the account, logging, or data transfer can still create charges.
+
+## Updating sources or code
+
+`sources.toml` is the single master source list. Edit it in GitHub whenever you add or remove a company. A GitHub edit does not automatically modify an already-uploaded Lambda ZIP, so after merging the change:
+
+1. Pull the repository locally.
+2. Run `.\scripts\package-lambda.ps1` again.
+3. Upload the new ZIP from the Lambda **Code** tab.
+
+The included GitHub Actions workflow is CI only: it runs unit tests after pushes and pull requests. It has no Discord webhook or AWS credentials, does not scrape on a schedule, and cannot post jobs. Production scheduling happens exclusively in EventBridge. You can delete the CI workflow if you do not want automatic test checks; doing so does not affect Lambda.
+
+## What is needed to deploy
+
+- Five private Discord webhook URLs, one for each category.
+- The AWS Region where Lambda and DynamoDB will live.
+- An AWS account with permission to create/configure one Lambda function, one DynamoDB table, one EventBridge schedule, and the small IAM roles described above.
+- Optional USAJOBS API key and registered email. Every other configured source works without credentials.
+
+Do not commit webhook URLs or AWS credentials to this repository. Put webhook URLs in Lambda environment variables. If someone else performs the deployment, grant narrowly scoped AWS access rather than sharing a root-account password or long-lived root key.
+
+## Validation checklist
+
+1. Run `python -m unittest discover -s tests -v` to validate filtering, routing, adapters, tier scheduling, and delivery state behavior without network calls.
+2. Run `python verify.py --only "Company Name"` to validate an actual configured endpoint without AWS or Discord.
+3. Invoke Lambda once with `{"seed_only": true}` and confirm the summary, CloudWatch source lines, and `seeded` records in DynamoDB.
+4. Invoke Lambda with `{}`. Immediately after seeding it should normally deliver zero jobs.
+5. Confirm the EventBridge schedule shows a successful invocation and a new Lambda log entry after five minutes.
+6. For an end-to-end Discord test, temporarily use five webhooks from private test channels and run a controlled non-seeded test table. Confirm one real posting reaches the expected category, then delete that temporary table or webhooks.
+
+There is no HTML renderer, `docs/` output, GitHub Pages deployment, or website publishing step in this version. Discord is the only presentation destination.
+
+## Operational notes
+
+- Discord delivery is effectively at-least-once. Conditional DynamoDB claims prevent routine duplicates, including overlapping Lambda runs. Like any webhook system, a crash in the tiny interval after Discord accepts a message but before DynamoDB records completion can produce one duplicate after the 15-minute claim expires.
+- A job that matches more than one category goes only to the highest-scoring primary category.
+- Discord embeds use a clickable position title and show Company, Graduation, Location, Category, Posted date, requirements, and an apply link. Graduation displays `?` when the posting does not explicitly provide a graduation date or range.
+- Unmatched jobs are not stored, so changes to category keywords can classify them in a future deployment.
+- Webhook URLs are never logged. Delete and recreate a Discord webhook immediately if its URL is exposed.
