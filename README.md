@@ -47,7 +47,7 @@ When the health webhook is configured, it receives:
 - one alert after a source fails three consecutive checks
 - one alert when a historically nonempty source unexpectedly returns zero jobs three consecutive times
 - a recovery message when the source works again
-- one daily heartbeat proving that Lambda, DynamoDB, and the health webhook are still connected
+- one daily heartbeat on the first successful scan at or after 8:00 AM Eastern, proving that Lambda, DynamoDB, and the health webhook are still connected
 
 The scraper cannot send an alert if Lambda or EventBridge stops completely. A missing daily heartbeat is the Discord-side warning for that case; a CloudWatch alarm can also provide independent email notification.
 
@@ -98,6 +98,8 @@ Other optional variables:
 | `MAX_DESCRIPTION_LOOKUPS` | `100` | Maximum missing descriptions fetched per invocation. |
 | `MAX_JOBS_PER_RUN` | `40` | Delivery cap; overflow remains unseen for later runs. |
 | `HEALTH_FAILURE_THRESHOLD` | `3` | Consecutive bad checks before a source alert. |
+| `HEALTH_HEARTBEAT_HOUR` | `8` | Earliest local hour for the once-daily heartbeat (0-23). |
+| `HEALTH_TIME_ZONE` | `America/New_York` | IANA time zone used for the heartbeat, including daylight saving time. |
 | `USAJOBS_API_KEY` | none | Enables USAJOBS when paired with `USAJOBS_EMAIL`. |
 | `USAJOBS_EMAIL` | none | Email registered for the USAJOBS API key. |
 | `GITHUB_TOKEN` | none | Raises GitHub API limits for list revision checks; no write permission is needed. |
@@ -210,6 +212,6 @@ The GitHub Actions workflow is CI only. It runs unit tests after pushes and pull
 4. The health test appears in the sixth Discord channel.
 5. A normal `{}` invocation finishes without delivery failures.
 6. EventBridge creates a fresh invocation after five minutes.
-7. One daily health heartbeat appears in Discord.
+7. One daily health heartbeat appears in Discord at about 8:00 AM Eastern.
 
 There is no HTML renderer, `docs/` site output, GitHub Pages deployment, or website publishing step.

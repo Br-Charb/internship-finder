@@ -1,3 +1,4 @@
+import datetime as dt
 import os
 import unittest
 from unittest.mock import patch
@@ -44,10 +45,17 @@ SUMMARY = {
 
 
 class SourceHealthTests(unittest.TestCase):
-    def monitor(self, state, statuses):
+    def monitor(self, state, statuses, now=None):
+        now = now or dt.datetime(2026, 1, 15, 13, 5, tzinfo=dt.timezone.utc)
         with patch.object(run, "post_to_discord") as post, patch.dict(
-            os.environ, {"HEALTH_FAILURE_THRESHOLD": "3"}, clear=False
-        ):
+            os.environ,
+            {
+                "HEALTH_FAILURE_THRESHOLD": "3",
+                "HEALTH_HEARTBEAT_HOUR": "8",
+                "HEALTH_TIME_ZONE": "America/New_York",
+            },
+            clear=False,
+        ), patch.object(run, "_utc_now", return_value=now):
             result = run._monitor_source_health(
                 state, statuses, "https://discord.com/api/webhooks/health/secret", SUMMARY
             )
@@ -86,6 +94,31 @@ class SourceHealthTests(unittest.TestCase):
         self.assertEqual(1, result["health_events"])
         self.assertEqual(1, post.call_count)
         self.assertTrue(state.records["Example Co"]["zero_alerted"])
+
+    def test_daily_heartbeat_waits_until_eight_eastern(self):
+        state = HealthState()
+        before, before_post = self.monitor(
+            state,
+            status(True, 10),
+            dt.datetime(2026, 1, 15, 12, 55, tzinfo=dt.timezone.utc),
+        )
+        at_eight, at_eight_post = self.monitor(
+            state,
+            status(True, 10),
+            dt.datetime(2026, 1, 15, 13, 0, tzinfo=dt.timezone.utc),
+        )
+        after, after_post = self.monitor(
+            state,
+            status(True, 10),
+            dt.datetime(2026, 1, 15, 14, 0, tzinfo=dt.timezone.utc),
+        )
+
+        self.assertEqual(0, before["health_heartbeat_sent"])
+        before_post.assert_not_called()
+        self.assertEqual(1, at_eight["health_heartbeat_sent"])
+        at_eight_post.assert_called_once()
+        self.assertEqual(0, after["health_heartbeat_sent"])
+        after_post.assert_not_called()
 
     def test_health_webhook_test_mode(self):
         with patch.object(

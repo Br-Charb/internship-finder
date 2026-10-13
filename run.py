@@ -21,6 +21,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from jobfinder.match import (
     CATEGORIES,
@@ -42,6 +43,8 @@ DEFAULT_TABLE = "internship-finder-seen"
 CLAIM_LEASE_SECONDS = 15 * 60
 DISCORD_TIMEOUT_SECONDS = 15
 DEFAULT_HEALTH_FAILURE_THRESHOLD = 3
+DEFAULT_HEALTH_HEARTBEAT_HOUR = 8
+DEFAULT_HEALTH_TIME_ZONE = "America/New_York"
 
 
 def _utc_now() -> dt.datetime:
@@ -180,7 +183,7 @@ class DynamoSeenJobs:
         self.table.put_item(Item=item)
 
     def claim_daily_heartbeat(self, day: str) -> bool:
-        """Atomically reserve one health heartbeat per UTC day."""
+        """Atomically reserve one health heartbeat per configured local day."""
         try:
             self.table.update_item(
                 Key={"job_id": "__health_heartbeat__"},
@@ -466,6 +469,24 @@ def _health_payload(title: str, description: str, color: int) -> dict[str, Any]:
     }
 
 
+def _heartbeat_due() -> tuple[bool, str, int, str]:
+    """Return whether today's heartbeat is due in the configured time zone."""
+    time_zone = os.environ.get("HEALTH_TIME_ZONE", DEFAULT_HEALTH_TIME_ZONE).strip()
+    if not time_zone:
+        time_zone = DEFAULT_HEALTH_TIME_ZONE
+    try:
+        hour = int(os.environ.get(
+            "HEALTH_HEARTBEAT_HOUR", str(DEFAULT_HEALTH_HEARTBEAT_HOUR)
+        ))
+    except ValueError as error:
+        raise ValueError("HEALTH_HEARTBEAT_HOUR must be an integer from 0 through 23") from error
+    if not 0 <= hour <= 23:
+        raise ValueError("HEALTH_HEARTBEAT_HOUR must be an integer from 0 through 23")
+
+    local_now = _utc_now().astimezone(ZoneInfo(time_zone))
+    return local_now.hour >= hour, local_now.date().isoformat(), hour, time_zone
+
+
 def test_health_webhook() -> dict[str, Any]:
     webhook = _health_webhook_url()
     if webhook is None:
@@ -579,14 +600,15 @@ def _monitor_source_health(
         state.save_source_health(name, values)
 
     heartbeat_sent = 0
-    today = _utc_now().date().isoformat()
-    if state.claim_daily_heartbeat(today):
+    heartbeat_is_due, local_day, heartbeat_hour, heartbeat_time_zone = _heartbeat_due()
+    if heartbeat_is_due and state.claim_daily_heartbeat(local_day):
         heartbeat_description = (
             f"The scheduled pipeline is running. This invocation checked "
             f"**{summary['sources_checked']}** sources, found **{summary['raw_jobs']}** raw jobs, "
             f"and delivered **{summary['delivered']}** new alerts.\n\n"
             f"Sources failing this check: **{len(summary['failed_sources'])}**. "
-            "Individual source alerts require consecutive failures."
+            "Individual source alerts require consecutive failures.\n\n"
+            f"Scheduled after **{heartbeat_hour:02d}:00 {heartbeat_time_zone}** each day."
         )
         try:
             post_to_discord(
