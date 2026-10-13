@@ -7,6 +7,7 @@ Each fetcher returns a list of job dicts with these keys:
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import os
 import random
@@ -14,7 +15,7 @@ import re
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from .util import FetchError, get_json, html_to_text, parse_ats_url, post_json, request, strip_tracking
 
@@ -322,16 +323,30 @@ def fetch_workday(host: str, site: str, company: str, max_pages: int = 10) -> li
         return list(pool.map(detail, wanted))
 
 
-def fetch_eightfold(host: str, domain: str, company: str, max_pages: int = 15) -> list[dict]:
-    """Eightfold career sites (e.g. lockheedmartin.eightfold.ai). Search pages hold
-    10 postings and no description, so each internship is opened for its text."""
-    api = f"https://{host}/api/pcsx"
+def fetch_eightfold(
+    host: str,
+    domain: str,
+    company: str,
+    query: str = "intern",
+    max_pages: int = 100,
+) -> list[dict]:
+    """Fetch either generation of Eightfold's public career-site API.
+
+    Most tenants use ``apply/v2``. A few older/locked-down sites (including the
+    existing Lockheed source) still expose ``pcsx`` instead, so the latter is a
+    fallback rather than a separate adapter.
+    """
+    apply_api = f"https://{host}/api/apply/v2/jobs"
     postings, seen = [], set()
-    for term in ("intern", "co-op"):
+    try:
         start = 0
         for _ in range(max_pages):
-            page = get_json(f"{api}/search?domain={domain}&query={term}&start={start}", timeout=40)
-            page = page.get("data", page)
+            encoded_domain = quote(domain)
+            encoded_query = quote(query)
+            page = get_json(
+                f"{apply_api}?domain={encoded_domain}&query={encoded_query}&num=10&start={start}",
+                timeout=40,
+            )
             batch = page.get("positions") or []
             for p in batch:
                 if p.get("id") not in seen:
@@ -340,22 +355,40 @@ def fetch_eightfold(host: str, domain: str, company: str, max_pages: int = 15) -
             start += len(batch)
             if not batch or start >= int(page.get("count") or 0):
                 break
-    wanted = [p for p in postings if _INTERNISH.search(p.get("name", ""))]
+    except FetchError:
+        pcsx_api = f"https://{host}/api/pcsx"
+        postings.clear()
+        seen.clear()
+        for term in (query or "intern", "co-op"):
+            start = 0
+            for _ in range(min(max_pages, 30)):
+                encoded_domain = quote(domain)
+                encoded_term = quote(term)
+                page = get_json(
+                    f"{pcsx_api}/search?domain={encoded_domain}&query={encoded_term}&start={start}",
+                    timeout=40,
+                )
+                page = page.get("data", page)
+                batch = page.get("positions") or []
+                for p in batch:
+                    if p.get("id") not in seen:
+                        seen.add(p.get("id"))
+                        postings.append(p)
+                start += len(batch)
+                if not batch or start >= int(page.get("count") or 0):
+                    break
+
+    wanted = [p for p in postings if _INTERNISH.search(str(p.get("name") or ""))]
 
     def detail(p):
-        try:
-            info = get_json(f"{api}/position_details?position_id={p['id']}&domain={domain}&hl=en", timeout=30)
-            info = info.get("data", info)
-        except FetchError:
-            info = {}
         return {
             "company": company,
             "title": (p.get("name") or "").strip(),
-            "location": "; ".join(p.get("locations") or []),
-            "url": info.get("publicUrl") or f"https://{host}{p.get('positionUrl', '')}",
+            "location": "; ".join(p.get("locations") or []) or str(p.get("location") or ""),
+            "url": p.get("canonicalPositionUrl") or f"https://{host}{p.get('positionUrl', '')}",
             "source": f"{company} careers",
-            "posted": _date_from_epoch(p.get("postedTs")),
-            "description": html_to_text(info.get("jobDescription")),
+            "posted": _date_from_epoch(p.get("postedTs") or p.get("t_create")),
+            "description": html_to_text(p.get("job_description")),
             "season_hint": "",
         }
 
@@ -431,12 +464,14 @@ def fetch_all(
     cfg: dict,
     tiers: set[int] | None = None,
     only: set[str] | None = None,
+    schedule_slot: int | None = None,
 ) -> tuple[list[dict], list[dict]]:
     """Return ``(jobs, source_status)`` without letting one source stop a run.
 
     ``tier`` defaults to 1. The Lambda runner uses tier 1 every five minutes,
-    tier 2 every fifteen minutes, and tier 3 hourly. ``only`` is used by the
-    read-only verification command to probe named sources.
+    tier 2 every fifteen minutes, and tier 3 hourly. Lower tiers are assigned a
+    stable slot so a large catalog is spread across invocations. ``only`` is
+    used by verification and batch seeding and bypasses slot staggering.
     """
     selected_names = {name.casefold() for name in (only or set())}
     tasks = []  # (label, kind, tier, host-group, callable)
@@ -448,7 +483,13 @@ def fetch_all(
             return
         if selected_names and label.casefold() not in selected_names:
             return
-        tasks.append((label, kind, tier, host, fn))
+        if schedule_slot is not None and not selected_names:
+            cadence = {1: 1, 2: 3, 3: 12}[tier]
+            digest = hashlib.sha256(label.casefold().encode("utf-8")).digest()
+            assigned_slot = int.from_bytes(digest[:4], "big") % cadence
+            if schedule_slot % cadence != assigned_slot:
+                return
+        tasks.append((label, kind, tier, str(entry.get("group", "other")), host, fn))
 
     for src in cfg.get("list", []):
         add(src, "Internship list", "raw.githubusercontent.com", lambda s=src: fetch_simplify_list(s))
@@ -468,7 +509,9 @@ def fetch_all(
     for c in cfg.get("workday", []):
         add(c, "Workday", c["host"], lambda c=c: fetch_workday(c["host"], c["site"], c["name"]))
     for c in cfg.get("eightfold", []):
-        add(c, "Eightfold", c["host"], lambda c=c: fetch_eightfold(c["host"], c["domain"], c["name"]))
+        add(c, "Eightfold", c["host"], lambda c=c: fetch_eightfold(
+            c["host"], c["domain"], c["name"], str(c.get("query", "intern"))
+        ))
     for c in cfg.get("clearcompany", []):
         add(c, "ClearCompany", "careers-api.clearcompany.com",
             lambda c=c: fetch_clearcompany(c["site_id"], c["name"]))
@@ -480,11 +523,11 @@ def fetch_all(
     # The short jitter also keeps scheduled invocations from always arriving on
     # the exact same millisecond as other public clients.
     host_limits: dict[str, threading.BoundedSemaphore] = {}
-    for _, _, _, host, _ in tasks:
+    for _, _, _, _, host, _ in tasks:
         host_limits.setdefault(host, threading.BoundedSemaphore(2))
 
     def run(task):
-        label, kind, tier, host, fn = task
+        label, kind, tier, group, host, fn = task
         try:
             with host_limits[host]:
                 time.sleep(random.uniform(0.02, 0.18))
@@ -492,12 +535,12 @@ def fetch_all(
             for j in jobs:
                 j["source_id"] = label
             return jobs, {
-                "name": label, "kind": kind, "tier": tier,
+                "name": label, "kind": kind, "tier": tier, "group": group,
                 "ok": True, "count": len(jobs), "error": "",
             }
         except Exception as e:  # noqa: BLE001 - report anything, keep going
             return [], {
-                "name": label, "kind": kind, "tier": tier,
+                "name": label, "kind": kind, "tier": tier, "group": group,
                 "ok": False, "count": 0, "error": str(e)[:160],
             }
 

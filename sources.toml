@@ -1,142 +1,1737 @@
-# Master source list for the Lambda-to-Discord job finder.
-#
-# tier 1: every EventBridge run (5 minutes)
-# tier 2: every third run (about 15 minutes)
-# tier 3: every twelfth run (about 60 minutes)
-#
-# A missing tier defaults to tier 1. One broken source is logged and does not
-# prevent the remaining boards from being checked.
+# Master source catalog for the Lambda scraper.
+# Includes 246 entries from jhuynh06/internmaxx plus local sources.
+# Refresh manually with: python scripts/import-internmaxx.py
+# tier 1 = every 5 min; tier 2 = every 15 min; tier 3 = hourly.
 
-greenhouse = [
-  { name = "SpaceX", board = "spacex" },
-  { name = "Anduril", board = "andurilindustries" },
-  { name = "Relativity Space", board = "relativity" },
-  { name = "Rocket Lab", board = "rocketlab" },
-  { name = "Astranis", board = "astranis" },
-  { name = "Planet", board = "planetlabs" },
-  { name = "Zipline", board = "flyzipline" },
-  { name = "Varda Space", board = "vardaspace" },
-  { name = "True Anomaly", board = "trueanomalyinc", tier = 2 },
-  { name = "K2 Space", board = "k2spacecorporation", tier = 2 },
-  { name = "Terran Orbital", board = "terranorbitalcorporation", tier = 2 },
-  { name = "Voyager Technologies", board = "voyagertechnologiesinc", tier = 2 },
-  { name = "Muon Space", board = "muonspace", tier = 2 },
-  { name = "Vast Space", board = "vast", tier = 2 },
-  { name = "Ursa Major", board = "ursamajor", tier = 2 },
-  { name = "Archer Aviation", board = "archer56", tier = 2 },
-  { name = "JetZero", board = "jetzero", tier = 2 },
-  { name = "Electra Aero", board = "electraaero", tier = 2 },
-  { name = "Epirus", board = "epirus", tier = 2 },
-  { name = "Stoke Space", board = "stokespacetechnologies", tier = 2 },
-  { name = "Space Kinetic", board = "spacekinetic", tier = 3 },
-  { name = "Freeform", board = "freeformfuturecorp", tier = 3 },
-  { name = "GITAI", board = "gitai", tier = 3 },
-  { name = "AST SpaceMobile", board = "astspacemobile", tier = 3 },
-  { name = "HawkEye 360", board = "hawkeye360", tier = 3 },
+[[greenhouse]]
+name = "Planet"
+board = "planetlabs"
 
-  # Broader engineering/software/finance coverage, using public ATS boards.
-  { name = "Anthropic", board = "anthropic" },
-  { name = "xAI", board = "xai" },
-  { name = "Databricks", board = "databricks", tier = 2 },
-  { name = "Figma", board = "figma", tier = 2 },
-  { name = "Stripe", board = "stripe", tier = 2 },
-  { name = "Jane Street", board = "janestreet", tier = 2 },
-  { name = "Hudson River Trading", board = "wehrtyou", tier = 2 },
-  { name = "Waymo", board = "waymo", tier = 2 },
-  { name = "Neuralink", board = "neuralink", tier = 2 },
-  { name = "Nuro", board = "nuro", tier = 2 },
-  { name = "Roblox", board = "roblox", tier = 3 },
-  { name = "Cloudflare", board = "cloudflare", tier = 3 },
-]
+[[greenhouse]]
+name = "Anduril"
+board = "andurilindustries"
+group = "aero"
 
-lever = [
-  { name = "Shield AI", board = "shieldai" },
-  { name = "Hermeus", board = "hermeus" },
-  { name = "CesiumAstro", board = "CesiumAstro" },
-  { name = "ispace", board = "ispace-inc" },
-  { name = "Layup Parts", board = "layup" },
-  { name = "Palantir", board = "palantir", tier = 2 },
-  { name = "Spotify", board = "spotify", tier = 2 },
-  { name = "Zoox", board = "zoox", tier = 2 },
-  { name = "Mistral AI", board = "mistral", tier = 3 },
-]
+[[greenhouse]]
+name = "Astranis"
+board = "astranis"
+group = "aero"
 
-ashby = [
-  { name = "Hadrian", board = "hadrian-automation" },
-  { name = "Saronic", board = "saronic" },
-  { name = "Antares", board = "Antares" },
-  { name = "Northwood Space", board = "NorthwoodSpace" },
-  { name = "Apex Space", board = "apex-technology-inc" },
-  { name = "Reflect Orbital", board = "reflect-orbital" },
-  { name = "The Exploration Company", board = "the-exploration-company" },
-  { name = "WindBorne Systems", board = "windborne-systems" },
-  { name = "OpenAI", board = "openai", tier = 2 },
-  { name = "Perplexity", board = "perplexity", tier = 2 },
-  { name = "Cursor", board = "cursor", tier = 2 },
-  { name = "Snowflake", board = "snowflake", tier = 2 },
-  { name = "Notion", board = "notion", tier = 2 },
-  { name = "Ramp", board = "ramp", tier = 2 },
-  { name = "Plaid", board = "plaid", tier = 2 },
-  { name = "Skydio", board = "skydio", tier = 2 },
-]
+[[greenhouse]]
+name = "Relativity Space"
+board = "relativity"
+group = "aero"
 
-smartrecruiters = [
-  { name = "ServiceNow", board = "ServiceNow", tier = 2 },
-  { name = "Canva", board = "Canva", tier = 2 },
-  { name = "Glean", board = "GleanWork", tier = 3 },
-]
+[[greenhouse]]
+name = "Rocket Lab"
+board = "rocketlab"
+group = "aero"
 
-rippling = [
-  { name = "Rippling", board = "rippling", tier = 2 },
-]
+[[greenhouse]]
+name = "SpaceX"
+board = "spacex"
+group = "aero"
 
-# Workday host and site come directly from the company's career URL.
-workday = [
-  { name = "Northrop Grumman", host = "ngc.wd1.myworkdayjobs.com", site = "Northrop_Grumman_External_Site", tier = 2 },
-  { name = "Boeing", host = "boeing.wd1.myworkdayjobs.com", site = "EXTERNAL_CAREERS", tier = 2 },
-  { name = "RTX (Raytheon, Pratt & Whitney, Collins)", host = "globalhr.wd5.myworkdayjobs.com", site = "REC_RTX_Ext_Gateway", tier = 2 },
-  { name = "Blue Origin", host = "blueorigin.wd5.myworkdayjobs.com", site = "BlueOrigin", tier = 2 },
-  { name = "GE Aerospace", host = "geaerospace.wd5.myworkdayjobs.com", site = "GE_ExternalSite", tier = 2 },
-  { name = "Boeing (intern site)", host = "boeing.wd1.myworkdayjobs.com", site = "INTERN", tier = 2 },
-  { name = "Sierra Space", host = "sierraspace.wd1.myworkdayjobs.com", site = "Sierra_Space_External_Career_Site", tier = 2 },
-  { name = "Axiom Space", host = "axiomspace.wd5.myworkdayjobs.com", site = "External_Career_Site", tier = 2 },
-  { name = "AeroVironment", host = "avav.wd1.myworkdayjobs.com", site = "avav", tier = 3 },
-  { name = "Airbus", host = "ag.wd3.myworkdayjobs.com", site = "Airbus", tier = 3 },
-  { name = "Draper", host = "draper.wd5.myworkdayjobs.com", site = "Draper_Careers", tier = 3 },
-  { name = "Moog", host = "moog.wd5.myworkdayjobs.com", site = "moog_external_career_site", tier = 3 },
-  { name = "NASA Jet Propulsion Laboratory", host = "citjpl.wd5.myworkdayjobs.com", site = "Jobs", tier = 3 },
-  { name = "The Aerospace Corporation", host = "aero.wd5.myworkdayjobs.com", site = "external", tier = 3 },
-  { name = "NVIDIA", host = "nvidia.wd5.myworkdayjobs.com", site = "NVIDIAExternalCareerSite", tier = 2 },
-  { name = "Intel", host = "intel.wd1.myworkdayjobs.com", site = "External", tier = 2 },
-  { name = "Capital One", host = "capitalone.wd12.myworkdayjobs.com", site = "Capital_One", tier = 2 },
-  { name = "BlackRock", host = "blackrock.wd1.myworkdayjobs.com", site = "BlackRock_Professional", tier = 3 },
-  { name = "Salesforce", host = "salesforce.wd12.myworkdayjobs.com", site = "External_Career_Site", tier = 2 },
-  { name = "Adobe", host = "adobe.wd5.myworkdayjobs.com", site = "external_experienced", tier = 2 },
-]
+[[greenhouse]]
+name = "Varda Space"
+board = "vardaspace"
+group = "aero"
 
-eightfold = [
-  { name = "Lockheed Martin", host = "lockheedmartin.eightfold.ai", domain = "lockheedmartin.com", tier = 2 },
-]
+[[greenhouse]]
+name = "Zipline"
+board = "flyzipline"
+group = "aero"
 
-clearcompany = [
-  { name = "Firefly Aerospace", site_id = "00ed92c3-5bfb-7bfb-456d-4d9d77fef9a5", tier = 2 },
-]
+[[greenhouse]]
+name = "Anthropic"
+board = "anthropic"
+group = "ai"
 
-# Large GitHub-maintained list. Its commit SHA is cached in DynamoDB so an
-# unchanged file is not downloaded on every five-minute invocation.
+[[greenhouse]]
+name = "CoreWeave"
+board = "coreweave"
+tier = 1
+group = "ai"
+
+[[greenhouse]]
+name = "Scale AI"
+board = "scaleai"
+tier = 1
+group = "ai"
+
+[[greenhouse]]
+name = "Thinking Machines Lab"
+board = "thinkingmachines"
+tier = 1
+group = "ai"
+
+[[greenhouse]]
+name = "Together AI"
+board = "togetherai"
+tier = 1
+group = "ai"
+
+[[greenhouse]]
+name = "xAI"
+board = "xai"
+group = "ai"
+
+[[greenhouse]]
+name = "Epic Games"
+board = "epicgames"
+tier = 1
+group = "entertainment"
+
+[[greenhouse]]
+name = "Riot Games"
+board = "riotgames"
+tier = 1
+group = "entertainment"
+
+[[greenhouse]]
+name = "Block (Square)"
+board = "block"
+tier = 1
+group = "fintech"
+
+[[greenhouse]]
+name = "Coinbase"
+board = "coinbase"
+tier = 1
+group = "fintech"
+
+[[greenhouse]]
+name = "Robinhood"
+board = "robinhood"
+tier = 1
+group = "fintech"
+
+[[greenhouse]]
+name = "IMC Trading"
+board = "imc"
+tier = 1
+group = "quant"
+
+[[greenhouse]]
+name = "Jump Trading"
+board = "jumptrading"
+tier = 1
+group = "quant"
+
+[[greenhouse]]
+name = "Optiver US"
+board = "optiverus"
+tier = 1
+group = "quant"
+
+[[greenhouse]]
+name = "Point72 / Cubist"
+board = "point72"
+tier = 1
+group = "quant"
+
+[[greenhouse]]
+name = "Airbnb"
+board = "airbnb"
+tier = 1
+group = "software"
+
+[[greenhouse]]
+name = "Datadog"
+board = "datadog"
+tier = 1
+group = "software"
+
+[[greenhouse]]
+name = "Discord"
+board = "discord"
+tier = 1
+group = "software"
+
+[[greenhouse]]
+name = "Reddit"
+board = "reddit"
+tier = 1
+group = "software"
+
+[[greenhouse]]
+name = "Archer Aviation"
+board = "archer56"
+tier = 2
+
+[[greenhouse]]
+name = "Electra Aero"
+board = "electraaero"
+tier = 2
+
+[[greenhouse]]
+name = "JetZero"
+board = "jetzero"
+tier = 2
+
+[[greenhouse]]
+name = "K2 Space"
+board = "k2spacecorporation"
+tier = 2
+
+[[greenhouse]]
+name = "Muon Space"
+board = "muonspace"
+tier = 2
+
+[[greenhouse]]
+name = "Stoke Space"
+board = "stokespacetechnologies"
+tier = 2
+
+[[greenhouse]]
+name = "Terran Orbital"
+board = "terranorbitalcorporation"
+tier = 2
+
+[[greenhouse]]
+name = "True Anomaly"
+board = "trueanomalyinc"
+tier = 2
+
+[[greenhouse]]
+name = "Ursa Major"
+board = "ursamajor"
+tier = 2
+
+[[greenhouse]]
+name = "Vast Space"
+board = "vast"
+tier = 2
+
+[[greenhouse]]
+name = "Voyager Technologies"
+board = "voyagertechnologiesinc"
+tier = 2
+
+[[greenhouse]]
+name = "Aurora"
+board = "aurorainnovation"
+tier = 2
+group = "aero"
+
+[[greenhouse]]
+name = "Epirus"
+board = "epirus"
+tier = 2
+group = "aero"
+
+[[greenhouse]]
+name = "Neuralink"
+board = "neuralink"
+tier = 2
+group = "aero"
+
+[[greenhouse]]
+name = "Nuro"
+board = "nuro"
+tier = 2
+group = "aero"
+
+[[greenhouse]]
+name = "Waymo"
+board = "waymo"
+tier = 2
+group = "aero"
+
+[[greenhouse]]
+name = "Apptronik"
+board = "apptronik"
+tier = 2
+group = "ai"
+
+[[greenhouse]]
+name = "Black Forest Labs"
+board = "blackforestlabs"
+tier = 2
+group = "ai"
+
+[[greenhouse]]
+name = "Figure (robotics)"
+board = "figureai"
+tier = 2
+group = "ai"
+
+[[greenhouse]]
+name = "Fireworks AI"
+board = "fireworksai"
+tier = 2
+group = "ai"
+
+[[greenhouse]]
+name = "SambaNova"
+board = "sambanovasystems"
+tier = 2
+group = "ai"
+
+[[greenhouse]]
+name = "World Labs"
+board = "worldlabs"
+tier = 2
+group = "ai"
+
+[[greenhouse]]
+name = "Rockstar Games"
+board = "rockstargames"
+tier = 2
+group = "entertainment"
+
+[[greenhouse]]
+name = "Roku"
+board = "roku"
+tier = 2
+group = "entertainment"
+
+[[greenhouse]]
+name = "Take-Two"
+board = "taketwo"
+tier = 2
+group = "entertainment"
+
+[[greenhouse]]
+name = "The New York Times"
+board = "thenewyorktimes"
+tier = 2
+group = "entertainment"
+
+[[greenhouse]]
+name = "Adyen"
+board = "adyen"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "Affirm"
+board = "affirm"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "Brex"
+board = "brex"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "Carta"
+board = "carta"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "Chime"
+board = "chime"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "Gemini"
+board = "gemini"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "Mercury"
+board = "mercury"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "Nubank"
+board = "nubank"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "Ripple"
+board = "ripple"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "SoFi"
+board = "sofi"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "Stripe"
+board = "stripe"
+tier = 2
+group = "fintech"
+
+[[greenhouse]]
+name = "Akuna Capital"
+board = "akunacapital"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "AQR"
+board = "aqr"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "DRW"
+board = "drweng"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "Five Rings"
+board = "fiveringsllc"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "Flow Traders"
+board = "flowtraders"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "Hudson River Trading"
+board = "wehrtyou"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "Jane Street"
+board = "janestreet"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "Old Mission"
+board = "oldmissioncapital"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "PDT Partners"
+board = "pdtpartners"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "Squarepoint"
+board = "squarepointcapital"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "Tower Research"
+board = "towerresearchcapital"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "Virtu Financial"
+board = "virtu"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "WorldQuant"
+board = "worldquant"
+tier = 2
+group = "quant"
+
+[[greenhouse]]
+name = "Airtable"
+board = "airtable"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Asana"
+board = "asana"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Databricks"
+board = "databricks"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "DoorDash"
+board = "doordashusa"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Dropbox"
+board = "dropbox"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Elastic"
+board = "elastic"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Figma"
+board = "figma"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "GitLab"
+board = "gitlab"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Gusto"
+board = "gusto"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Instacart"
+board = "instacart"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Lyft"
+board = "lyft"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "MongoDB"
+board = "mongodb"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Okta"
+board = "okta"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Pinterest"
+board = "pinterest"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Rubrik"
+board = "rubrik"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Samsara"
+board = "samsara"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "SentinelOne"
+board = "sentinellabs"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Tailscale"
+board = "tailscale"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Toast"
+board = "toast"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Twilio"
+board = "twilio"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Twitch"
+board = "twitch"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Vercel"
+board = "vercel"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Verkada"
+board = "verkada"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "Zscaler"
+board = "zscaler"
+tier = 2
+group = "software"
+
+[[greenhouse]]
+name = "AST SpaceMobile"
+board = "astspacemobile"
+tier = 3
+
+[[greenhouse]]
+name = "Freeform"
+board = "freeformfuturecorp"
+tier = 3
+
+[[greenhouse]]
+name = "GITAI"
+board = "gitai"
+tier = 3
+
+[[greenhouse]]
+name = "HawkEye 360"
+board = "hawkeye360"
+tier = 3
+
+[[greenhouse]]
+name = "Space Kinetic"
+board = "spacekinetic"
+tier = 3
+
+[[greenhouse]]
+name = "Kodiak Robotics"
+board = "kodiak"
+tier = 3
+group = "aero"
+
+[[greenhouse]]
+name = "Contextual AI"
+board = "contextualai"
+tier = 3
+group = "ai"
+
+[[greenhouse]]
+name = "Imbue"
+board = "imbue"
+tier = 3
+group = "ai"
+
+[[greenhouse]]
+name = "Stability AI"
+board = "stabilityai"
+tier = 3
+group = "ai"
+
+[[greenhouse]]
+name = "Axios"
+board = "axios"
+tier = 3
+group = "entertainment"
+
+[[greenhouse]]
+name = "Vox Media"
+board = "voxmedia"
+tier = 3
+group = "entertainment"
+
+[[greenhouse]]
+name = "Betterment"
+board = "betterment"
+tier = 3
+group = "fintech"
+
+[[greenhouse]]
+name = "Fireblocks"
+board = "fireblocks"
+tier = 3
+group = "fintech"
+
+[[greenhouse]]
+name = "Lithic"
+board = "lithic"
+tier = 3
+group = "fintech"
+
+[[greenhouse]]
+name = "Marqeta"
+board = "marqeta"
+tier = 3
+group = "fintech"
+
+[[greenhouse]]
+name = "Komodo Health"
+board = "komodohealth"
+tier = 3
+group = "health"
+
+[[greenhouse]]
+name = "Oscar Health"
+board = "oscar"
+tier = 3
+group = "health"
+
+[[greenhouse]]
+name = "3Red Partners"
+board = "3redpartners"
+tier = 3
+group = "quant"
+
+[[greenhouse]]
+name = "DV Trading"
+board = "dvtrading"
+tier = 3
+group = "quant"
+
+[[greenhouse]]
+name = "ExodusPoint"
+board = "exoduspoint"
+tier = 3
+group = "quant"
+
+[[greenhouse]]
+name = "Geneva Trading"
+board = "genevatrading"
+tier = 3
+group = "quant"
+
+[[greenhouse]]
+name = "Man Group"
+board = "mangroup"
+tier = 3
+group = "quant"
+
+[[greenhouse]]
+name = "Marshall Wace"
+board = "marshallwace"
+tier = 3
+group = "quant"
+
+[[greenhouse]]
+name = "Schonfeld"
+board = "schonfeld"
+tier = 3
+group = "quant"
+
+[[greenhouse]]
+name = "TransMarket Group"
+board = "transmarketgroup"
+tier = 3
+group = "quant"
+
+[[greenhouse]]
+name = "Attentive"
+board = "attentive"
+tier = 3
+group = "software"
+
+[[greenhouse]]
+name = "Cloudflare"
+board = "cloudflare"
+tier = 3
+group = "software"
+
+[[greenhouse]]
+name = "Faire"
+board = "faire"
+tier = 3
+group = "software"
+
+[[greenhouse]]
+name = "Fastly"
+board = "fastly"
+tier = 3
+group = "software"
+
+[[greenhouse]]
+name = "Flexport"
+board = "flexport"
+tier = 3
+group = "software"
+
+[[greenhouse]]
+name = "Navan"
+board = "tripactions"
+tier = 3
+group = "software"
+
+[[greenhouse]]
+name = "Netlify"
+board = "netlify"
+tier = 3
+group = "software"
+
+[[greenhouse]]
+name = "Roblox"
+board = "roblox"
+tier = 3
+group = "software"
+
+[[greenhouse]]
+name = "Squarespace"
+board = "squarespace"
+tier = 3
+group = "software"
+
+[[greenhouse]]
+name = "Temporal"
+board = "temporaltechnologies"
+tier = 3
+group = "software"
+
+[[lever]]
+name = "CesiumAstro"
+board = "CesiumAstro"
+
+[[lever]]
+name = "ispace"
+board = "ispace-inc"
+
+[[lever]]
+name = "Layup Parts"
+board = "layup"
+
+[[lever]]
+name = "Hermeus"
+board = "hermeus"
+group = "aero"
+
+[[lever]]
+name = "Shield AI"
+board = "shieldai"
+group = "aero"
+
+[[lever]]
+name = "Zoox"
+board = "zoox"
+tier = 2
+group = "aero"
+
+[[lever]]
+name = "Palantir"
+board = "palantir"
+tier = 2
+group = "software"
+
+[[lever]]
+name = "Spotify"
+board = "spotify"
+tier = 2
+group = "software"
+
+[[lever]]
+name = "Mistral AI"
+board = "mistral"
+tier = 3
+group = "ai"
+
+[[lever]]
+name = "Anchorage Digital"
+board = "anchorage"
+tier = 3
+group = "fintech"
+
+[[lever]]
+name = "Wealthfront"
+board = "wealthfront"
+tier = 3
+group = "fintech"
+
+[[lever]]
+name = "Ro"
+board = "ro"
+tier = 3
+group = "health"
+
+[[lever]]
+name = "Belvedere Trading"
+board = "belvederetrading"
+tier = 3
+group = "quant"
+
+[[lever]]
+name = "Valkyrie Trading"
+board = "valkyrietrading"
+tier = 3
+group = "quant"
+
+[[ashby]]
+name = "Antares"
+board = "Antares"
+
+[[ashby]]
+name = "Apex Space"
+board = "apex-technology-inc"
+
+[[ashby]]
+name = "Hadrian"
+board = "hadrian-automation"
+
+[[ashby]]
+name = "Northwood Space"
+board = "NorthwoodSpace"
+
+[[ashby]]
+name = "Reflect Orbital"
+board = "reflect-orbital"
+
+[[ashby]]
+name = "The Exploration Company"
+board = "the-exploration-company"
+
+[[ashby]]
+name = "WindBorne Systems"
+board = "windborne-systems"
+
+[[ashby]]
+name = "Saronic"
+board = "saronic"
+group = "aero"
+
+[[ashby]]
+name = "Cerebras"
+board = "cerebras"
+tier = 1
+group = "ai"
+
+[[ashby]]
+name = "Cognition (Devin/Windsurf)"
+board = "cognition"
+tier = 1
+group = "ai"
+
+[[ashby]]
+name = "Cohere"
+board = "cohere"
+tier = 1
+group = "ai"
+
+[[ashby]]
+name = "ElevenLabs"
+board = "elevenlabs"
+tier = 1
+group = "ai"
+
+[[ashby]]
+name = "Harvey"
+board = "harvey"
+tier = 1
+group = "ai"
+
+[[ashby]]
+name = "Safe Superintelligence"
+board = "ssi"
+tier = 1
+group = "ai"
+
+[[ashby]]
+name = "Sierra"
+board = "sierra"
+tier = 1
+group = "ai"
+
+[[ashby]]
+name = "Skydio"
+board = "skydio"
+tier = 2
+group = "aero"
+
+[[ashby]]
+name = "1X Technologies"
+board = "1x"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Abridge"
+board = "abridge"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Anyscale"
+board = "anyscale"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Baseten"
+board = "baseten"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Browserbase"
+board = "browserbase"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Character AI"
+board = "character"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Crusoe"
+board = "crusoe"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Cursor"
+board = "cursor"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Decagon"
+board = "decagon"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Lambda"
+board = "lambda"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "LangChain"
+board = "langchain"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Midjourney"
+board = "midjourney"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Modal"
+board = "modal"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "OpenAI"
+board = "openai"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "OpenEvidence"
+board = "openevidence"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Perplexity"
+board = "perplexity"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Physical Intelligence"
+board = "physicalintelligence"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Runway"
+board = "runway"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Suno"
+board = "suno"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Writer"
+board = "writer"
+tier = 2
+group = "ai"
+
+[[ashby]]
+name = "Modern Treasury"
+board = "moderntreasury"
+tier = 2
+group = "fintech"
+
+[[ashby]]
+name = "Plaid"
+board = "plaid"
+tier = 2
+group = "fintech"
+
+[[ashby]]
+name = "Ramp"
+board = "ramp"
+tier = 2
+group = "fintech"
+
+[[ashby]]
+name = "Voleon"
+board = "voleon"
+tier = 2
+group = "quant"
+
+[[ashby]]
+name = "Linear"
+board = "linear"
+tier = 2
+group = "software"
+
+[[ashby]]
+name = "Miro"
+board = "miro"
+tier = 2
+group = "software"
+
+[[ashby]]
+name = "Notion"
+board = "notion"
+tier = 2
+group = "software"
+
+[[ashby]]
+name = "Replit"
+board = "replit"
+tier = 2
+group = "software"
+
+[[ashby]]
+name = "Snowflake"
+board = "snowflake"
+tier = 2
+group = "software"
+
+[[ashby]]
+name = "Supabase"
+board = "supabase"
+tier = 2
+group = "software"
+
+[[ashby]]
+name = "Wiz"
+board = "wiz"
+tier = 2
+group = "software"
+
+[[ashby]]
+name = "Boom Supersonic"
+board = "boom"
+tier = 3
+group = "aero"
+
+[[ashby]]
+name = "Liquid AI"
+board = "liquid-ai"
+tier = 3
+group = "ai"
+
+[[ashby]]
+name = "Luma-adjacent Ideogram"
+board = "ideogram"
+tier = 3
+group = "ai"
+
+[[ashby]]
+name = "Pinecone"
+board = "pinecone"
+tier = 3
+group = "ai"
+
+[[ashby]]
+name = "Reka"
+board = "reka"
+tier = 3
+group = "ai"
+
+[[ashby]]
+name = "Niantic"
+board = "niantic"
+tier = 3
+group = "entertainment"
+
+[[ashby]]
+name = "Alchemy"
+board = "alchemy"
+tier = 3
+group = "fintech"
+
+[[ashby]]
+name = "Paradigm"
+board = "paradigm"
+tier = 3
+group = "fintech"
+
+[[ashby]]
+name = "Uniswap Labs"
+board = "uniswap"
+tier = 3
+group = "fintech"
+
+[[ashby]]
+name = "Unit"
+board = "unit"
+tier = 3
+group = "fintech"
+
+[[ashby]]
+name = "Cedar"
+board = "cedar"
+tier = 3
+group = "health"
+
+[[ashby]]
+name = "Cubist (Ashby board)"
+board = "cubist"
+tier = 3
+group = "quant"
+
+[[ashby]]
+name = "Benchling"
+board = "benchling"
+tier = 3
+group = "software"
+
+[[ashby]]
+name = "PostHog"
+board = "posthog"
+tier = 3
+group = "software"
+
+[[ashby]]
+name = "Zip"
+board = "zip"
+tier = 3
+group = "software"
+
+[[smartrecruiters]]
+name = "Canva"
+board = "Canva"
+tier = 2
+group = "software"
+
+[[smartrecruiters]]
+name = "ServiceNow"
+board = "ServiceNow"
+tier = 2
+group = "software"
+
+[[smartrecruiters]]
+name = "Glean"
+board = "GleanWork"
+tier = 3
+
+[[smartrecruiters]]
+name = "Glean"
+board = "glean"
+tier = 3
+group = "software"
+
+[[smartrecruiters]]
+name = "Visa"
+board = "visa"
+tier = 3
+group = "software"
+
+[[rippling]]
+name = "Rippling"
+board = "rippling"
+tier = 2
+group = "software"
+
+[[workday]]
+name = "Axiom Space"
+host = "axiomspace.wd5.myworkdayjobs.com"
+site = "External_Career_Site"
+tier = 2
+
+[[workday]]
+name = "Blue Origin"
+host = "blueorigin.wd5.myworkdayjobs.com"
+site = "BlueOrigin"
+tier = 2
+
+[[workday]]
+name = "Boeing"
+host = "boeing.wd1.myworkdayjobs.com"
+site = "EXTERNAL_CAREERS"
+tier = 2
+
+[[workday]]
+name = "Boeing (intern site)"
+host = "boeing.wd1.myworkdayjobs.com"
+site = "INTERN"
+tier = 2
+
+[[workday]]
+name = "GE Aerospace"
+host = "geaerospace.wd5.myworkdayjobs.com"
+site = "GE_ExternalSite"
+tier = 2
+
+[[workday]]
+name = "Sierra Space"
+host = "sierraspace.wd1.myworkdayjobs.com"
+site = "Sierra_Space_External_Career_Site"
+tier = 2
+
+[[workday]]
+name = "Northrop Grumman"
+host = "ngc.wd1.myworkdayjobs.com"
+site = "Northrop_Grumman_External_Site"
+tier = 2
+group = "aero"
+
+[[workday]]
+name = "RTX (Raytheon, Pratt & Whitney, Collins)"
+host = "globalhr.wd5.myworkdayjobs.com"
+site = "REC_RTX_Ext_Gateway"
+tier = 2
+group = "aero"
+
+[[workday]]
+name = "Capital One"
+host = "capitalone.wd12.myworkdayjobs.com"
+site = "Capital_One"
+tier = 2
+group = "banks"
+
+[[workday]]
+name = "Analog Devices"
+host = "analogdevices.wd1.myworkdayjobs.com"
+site = "External"
+tier = 2
+group = "chips"
+
+[[workday]]
+name = "Intel"
+host = "intel.wd1.myworkdayjobs.com"
+site = "External"
+tier = 2
+group = "chips"
+
+[[workday]]
+name = "Marvell"
+host = "marvell.wd1.myworkdayjobs.com"
+site = "MarvellCareers2"
+tier = 2
+group = "chips"
+
+[[workday]]
+name = "Micron"
+host = "micron.wd1.myworkdayjobs.com"
+site = "External"
+tier = 2
+group = "chips"
+
+[[workday]]
+name = "NVIDIA"
+host = "nvidia.wd5.myworkdayjobs.com"
+site = "NVIDIAExternalCareerSite"
+tier = 2
+group = "chips"
+
+[[workday]]
+name = "Comcast/NBCU"
+host = "comcast.wd5.myworkdayjobs.com"
+site = "Comcast_Careers"
+tier = 2
+group = "entertainment"
+
+[[workday]]
+name = "Disney"
+host = "disney.wd5.myworkdayjobs.com"
+site = "disneycareer"
+tier = 2
+group = "entertainment"
+
+[[workday]]
+name = "Warner Bros. Discovery"
+host = "warnerbros.wd5.myworkdayjobs.com"
+site = "global"
+tier = 2
+group = "entertainment"
+
+[[workday]]
+name = "Adobe"
+host = "adobe.wd5.myworkdayjobs.com"
+site = "external_experienced"
+tier = 2
+group = "software"
+
+[[workday]]
+name = "CrowdStrike"
+host = "crowdstrike.wd5.myworkdayjobs.com"
+site = "crowdstrikecareers"
+tier = 2
+group = "software"
+
+[[workday]]
+name = "Salesforce"
+host = "salesforce.wd12.myworkdayjobs.com"
+site = "External_Career_Site"
+tier = 2
+group = "software"
+
+[[workday]]
+name = "Snap"
+host = "snapchat.wd1.myworkdayjobs.com"
+site = "snap"
+search = "intern"
+tier = 2
+group = "software"
+
+[[workday]]
+name = "AeroVironment"
+host = "avav.wd1.myworkdayjobs.com"
+site = "avav"
+tier = 3
+
+[[workday]]
+name = "Airbus"
+host = "ag.wd3.myworkdayjobs.com"
+site = "Airbus"
+tier = 3
+
+[[workday]]
+name = "Draper"
+host = "draper.wd5.myworkdayjobs.com"
+site = "Draper_Careers"
+tier = 3
+
+[[workday]]
+name = "Moog"
+host = "moog.wd5.myworkdayjobs.com"
+site = "moog_external_career_site"
+tier = 3
+
+[[workday]]
+name = "NASA Jet Propulsion Laboratory"
+host = "citjpl.wd5.myworkdayjobs.com"
+site = "Jobs"
+tier = 3
+
+[[workday]]
+name = "The Aerospace Corporation"
+host = "aero.wd5.myworkdayjobs.com"
+site = "external"
+tier = 3
+
+[[workday]]
+name = "Booz Allen"
+host = "bah.wd1.myworkdayjobs.com"
+site = "bah_jobs"
+tier = 3
+group = "aero"
+
+[[workday]]
+name = "Leidos"
+host = "leidos.wd5.myworkdayjobs.com"
+site = "External"
+tier = 3
+group = "aero"
+
+[[workday]]
+name = "BlackRock"
+host = "blackrock.wd1.myworkdayjobs.com"
+site = "BlackRock_Professional"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "CME Group"
+host = "cmegroup.wd1.myworkdayjobs.com"
+site = "cme_careers"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "FactSet"
+host = "factset.wd108.myworkdayjobs.com"
+site = "FactSetCareers"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "Fidelity"
+host = "fmr.wd1.myworkdayjobs.com"
+site = "targeted"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "Freddie Mac"
+host = "freddiemac.wd5.myworkdayjobs.com"
+site = "External"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "Mastercard"
+host = "mastercard.wd1.myworkdayjobs.com"
+site = "CorporateCareers"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "Nasdaq"
+host = "nasdaq.wd1.myworkdayjobs.com"
+site = "Global_External_Site"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "PayPal"
+host = "paypal.wd1.myworkdayjobs.com"
+site = "jobs"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "PNC"
+host = "pnc.wd5.myworkdayjobs.com"
+site = "External"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "S&P Global"
+host = "spgi.wd5.myworkdayjobs.com"
+site = "SPGI_Careers"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "State Street"
+host = "statestreet.wd1.myworkdayjobs.com"
+site = "Global"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "Truist"
+host = "truist.wd1.myworkdayjobs.com"
+site = "Careers"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "Vanguard"
+host = "vanguard.wd5.myworkdayjobs.com"
+site = "contractors_restricted"
+tier = 3
+group = "banks"
+
+[[workday]]
+name = "HP"
+host = "hp.wd5.myworkdayjobs.com"
+site = "EXTEU-AC-CareerSite"
+tier = 3
+group = "chips"
+
+[[workday]]
+name = "HPE"
+host = "hpe.wd5.myworkdayjobs.com"
+site = "Jobsathpe"
+tier = 3
+group = "chips"
+
+[[workday]]
+name = "Accenture"
+host = "accenture.wd103.myworkdayjobs.com"
+site = "AccentureCareers"
+tier = 3
+group = "consulting"
+
+[[workday]]
+name = "Live Nation"
+host = "livenation.wd503.myworkdayjobs.com"
+site = "LNExternalSite"
+tier = 3
+group = "entertainment"
+
+[[workday]]
+name = "Sony"
+host = "sonyglobal.wd1.myworkdayjobs.com"
+site = "SonyGlobalCareers"
+tier = 3
+group = "entertainment"
+
+[[workday]]
+name = "Sony Pictures"
+host = "spe.wd1.myworkdayjobs.com"
+site = "SonyPicturesEntertainment"
+tier = 3
+group = "entertainment"
+
+[[workday]]
+name = "Expedia"
+host = "expedia.wd108.myworkdayjobs.com"
+site = "private"
+tier = 3
+group = "software"
+
+[[workday]]
+name = "Target"
+host = "target.wd5.myworkdayjobs.com"
+site = "targetcareers"
+tier = 3
+group = "software"
+
+[[workday]]
+name = "Zillow"
+host = "zillow.wd5.myworkdayjobs.com"
+site = "Zillow_Group_External"
+tier = 3
+group = "software"
+
+[[eightfold]]
+name = "Lockheed Martin"
+host = "lockheedmartin.eightfold.ai"
+domain = "lockheedmartin.com"
+tier = 2
+
+[[eightfold]]
+name = "Millennium"
+host = "mlp.eightfold.ai"
+domain = "mlp.com"
+tier = 2
+group = "quant"
+query = ""
+
+[[clearcompany]]
+name = "Firefly Aerospace"
+site_id = "00ed92c3-5bfb-7bfb-456d-4d9d77fef9a5"
+tier = 2
+
+[[amazon]]
+name = "Amazon"
+slug = "amazon"
+tier = 1
+group = "software"
+
+[[apple]]
+name = "Apple"
+slug = "apple"
+tier = 1
+group = "software"
+
+[[bloomberg]]
+name = "Bloomberg"
+slug = "bloomberg"
+tier = 2
+group = "entertainment"
+
+[[citadel]]
+name = "Citadel"
+slug = "citadel"
+tier = 1
+group = "quant"
+
+[[citadel]]
+name = "Citadel Securities"
+slug = "citadelsecurities"
+tier = 1
+group = "quant"
+
+[[deshaw]]
+name = "D. E. Shaw"
+slug = "deshaw"
+tier = 2
+group = "quant"
+
+[[goldman]]
+name = "Goldman Sachs"
+slug = "goldman"
+tier = 2
+group = "banks"
+
+[[google]]
+name = "Google"
+slug = "google"
+tier = 1
+group = "software"
+
+[[meta]]
+name = "Meta"
+slug = "meta"
+tier = 1
+group = "software"
+
+[[microsoft]]
+name = "Microsoft"
+slug = "microsoft"
+tier = 1
+group = "software"
+
+[[netflix]]
+name = "Netflix"
+slug = "netflix"
+tier = 2
+group = "entertainment"
+
+[[oracle]]
+name = "JPMorgan Chase"
+site = "CX_1001"
+slug = "jpmc"
+tier = 3
+group = "banks"
+tenant = "jpmc"
+
+[[shopify]]
+name = "Shopify"
+slug = "shopify"
+tier = 2
+group = "software"
+
+[[sig]]
+name = "SIG (Susquehanna)"
+slug = "sig"
+tier = 2
+group = "quant"
+
+[[twosigma]]
+name = "Two Sigma"
+slug = "twosigma"
+tier = 2
+group = "quant"
+
+[[uber]]
+name = "Uber"
+slug = "uber"
+tier = 2
+group = "software"
+
 [[list]]
 name = "Simplify Summer 2027 list"
-urls = [
-  "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/dev/.github/scripts/listings.json",
-  "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/main/.github/scripts/listings.json",
-]
+urls = ["https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/dev/.github/scripts/listings.json", "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/main/.github/scripts/listings.json"]
 
 [[getro]]
 name = "Space Capital job board"
 collection = 338
 tier = 2
 
-# Free credentials: https://developer.usajobs.gov/apirequest/
 [usajobs]
 keywords = ["aerospace engineering student", "engineering student trainee", "aerospace intern"]
 tier = 3

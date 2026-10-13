@@ -141,12 +141,11 @@ class ExecutionTests(unittest.TestCase):
         self.assertEqual(5, summary["count"])
         self.assertEqual(5, post.call_count)
 
-    def test_polling_tiers(self):
-        # Epoch minute 0 is divisible by both 15 and 60 minutes.
+    def test_five_minute_slot(self):
         top_of_hour = dt.datetime(2026, 1, 1, 0, 0, tzinfo=dt.timezone.utc)
-        self.assertEqual({1, 2, 3}, run._active_tiers(top_of_hour))
-        self.assertEqual({1}, run._active_tiers(top_of_hour + dt.timedelta(minutes=5)))
-        self.assertEqual({1, 2}, run._active_tiers(top_of_hour + dt.timedelta(minutes=15)))
+        first = run._five_minute_slot(top_of_hour)
+        self.assertEqual(first + 1, run._five_minute_slot(top_of_hour + dt.timedelta(minutes=5)))
+        self.assertEqual(first + 12, run._five_minute_slot(top_of_hour + dt.timedelta(hours=1)))
 
     def test_discord_embed_layout_and_graduation(self):
         job = {

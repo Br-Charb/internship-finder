@@ -405,16 +405,10 @@ def _fill_descriptions(jobs: list[dict[str, Any]], limit: int) -> int:
     return loaded
 
 
-def _active_tiers(now: dt.datetime | None = None) -> set[int]:
-    """Select polling tiers while keeping EventBridge itself at five minutes."""
+def _five_minute_slot(now: dt.datetime | None = None) -> int:
+    """Return the stable EventBridge slot used to stagger the source catalog."""
     now = now or _utc_now()
-    five_minute_slot = int(now.timestamp()) // (5 * 60)
-    tiers = {1}
-    if five_minute_slot % 3 == 0:
-        tiers.add(2)
-    if five_minute_slot % 12 == 0:
-        tiers.add(3)
-    return tiers
+    return int(now.timestamp()) // (5 * 60)
 
 
 def _skip_unchanged_lists(
@@ -444,7 +438,7 @@ def _skip_unchanged_lists(
     return filtered, pending, cached
 
 
-def execute(seed_only: bool = False) -> dict[str, Any]:
+def execute(seed_only: bool = False, only_sources: set[str] | None = None) -> dict[str, Any]:
     """Fetch, route, deliver, and persist one complete scan."""
     config = tomllib.loads(SOURCES_FILE.read_text(encoding="utf-8"))
     scope = os.environ.get("JOB_SCOPE", "internships")
@@ -457,13 +451,20 @@ def execute(seed_only: bool = False) -> dict[str, Any]:
     webhooks = {} if seed_only else _webhook_urls()
     state = DynamoSeenJobs(table_name)
 
-    tiers = {1, 2, 3} if seed_only else _active_tiers()
+    tiers = {1, 2, 3}
+    schedule_slot = None if seed_only or only_sources else _five_minute_slot()
     config, pending_revisions, cached_lists = _skip_unchanged_lists(
         config, state, force=seed_only
     )
 
-    print(f"Fetching sources from {SOURCES_FILE.name}; active tiers={sorted(tiers)}")
-    raw_jobs, source_status = fetch_all(config, tiers=tiers)
+    scope_note = f" selected={sorted(only_sources)}" if only_sources else ""
+    print(f"Fetching sources from {SOURCES_FILE.name}; slot={schedule_slot}{scope_note}")
+    raw_jobs, source_status = fetch_all(
+        config,
+        tiers=tiers,
+        only=only_sources,
+        schedule_slot=schedule_slot,
+    )
     jobs_by_id = _deduplicate(raw_jobs, scope)
     known = state.known_ids(list(jobs_by_id))
     new_jobs = [job for key, job in jobs_by_id.items() if key not in known]
@@ -521,7 +522,9 @@ def execute(seed_only: bool = False) -> dict[str, Any]:
     failed_sources = [status["name"] for status in source_status if not status["ok"]]
     deferred = 0 if seed_only else max(0, len(routed) - delivery_limit)
     summary = {
-        "active_tiers": sorted(tiers),
+        "active_tiers": sorted({int(status["tier"]) for status in source_status}),
+        "schedule_slot": schedule_slot,
+        "sources_checked": len(source_status),
         "raw_jobs": len(raw_jobs),
         "eligible_unique_jobs": len(jobs_by_id),
         "previously_seen": len(known),
@@ -560,7 +563,15 @@ def lambda_handler(event: dict[str, Any] | None, context: Any) -> dict[str, Any]
             raise ValueError("test_webhooks and seed_only cannot both be true")
         return test_webhooks()
     seed_only = bool(event.get("seed_only", False))
-    return execute(seed_only=seed_only)
+    requested = event.get("seed_sources") or []
+    if isinstance(requested, str):
+        requested = [requested]
+    if not isinstance(requested, list) or not all(isinstance(name, str) for name in requested):
+        raise ValueError("seed_sources must be a source name or a list of source names")
+    if requested and not seed_only:
+        raise ValueError("seed_sources requires seed_only=true")
+    only_sources = {name.strip() for name in requested if name.strip()} or None
+    return execute(seed_only=seed_only, only_sources=only_sources)
 
 
 def main() -> int:

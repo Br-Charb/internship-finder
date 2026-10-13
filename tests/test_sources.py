@@ -71,6 +71,30 @@ class SourceAdapterTests(unittest.TestCase):
         self.assertEqual(["Fast"], [status["name"] for status in statuses])
         fetch_greenhouse.assert_called_once_with("fast", "Fast")
 
+    @patch.object(sources.time, "sleep")
+    @patch.object(sources, "fetch_greenhouse", return_value=[])
+    def test_fetch_all_staggers_lower_tiers(self, fetch_greenhouse, _sleep):
+        cfg = {"greenhouse": [
+            {"name": "Always", "board": "always", "tier": 1},
+            {"name": "Quarter Hour", "board": "quarter", "tier": 2},
+            {"name": "Hourly", "board": "hourly", "tier": 3},
+        ]}
+        observed = {name: 0 for name in ("Always", "Quarter Hour", "Hourly")}
+        for slot in range(12):
+            _, statuses = sources.fetch_all(cfg, tiers={1, 2, 3}, schedule_slot=slot)
+            for status in statuses:
+                observed[status["name"]] += 1
+        self.assertEqual({"Always": 12, "Quarter Hour": 4, "Hourly": 1}, observed)
+
+    @patch.object(sources.time, "sleep")
+    @patch.object(sources, "fetch_greenhouse", return_value=[])
+    def test_named_source_bypasses_staggering(self, fetch_greenhouse, _sleep):
+        cfg = {"greenhouse": [{"name": "Hourly", "board": "hourly", "tier": 3}]}
+        _, statuses = sources.fetch_all(
+            cfg, tiers={1, 2, 3}, only={"Hourly"}, schedule_slot=0
+        )
+        self.assertEqual(["Hourly"], [status["name"] for status in statuses])
+
 
 if __name__ == "__main__":
     unittest.main()
