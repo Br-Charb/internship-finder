@@ -180,6 +180,18 @@ class ExecutionTests(unittest.TestCase):
         self.assertEqual(["Large list"], cached)
         self.assertEqual(1, len(config["list"]))  # input was not mutated
 
+    @patch.object(run, "github_list_revision", return_value="same-sha")
+    def test_seed_forces_unchanged_github_list_fetch(self, _revision):
+        class RevisionState:
+            def source_revisions(self, _names):
+                raise AssertionError("forced seed should not need prior revisions")
+
+        config = {"list": [{"name": "Large list", "urls": ["https://example.test/jobs.json"]}]}
+        filtered, pending, cached = run._skip_unchanged_lists(config, RevisionState(), force=True)
+        self.assertEqual(1, len(filtered["list"]))
+        self.assertEqual({"Large list": "same-sha"}, pending)
+        self.assertEqual([], cached)
+
 
 if __name__ == "__main__":
     unittest.main()

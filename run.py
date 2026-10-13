@@ -418,21 +418,21 @@ def _active_tiers(now: dt.datetime | None = None) -> set[int]:
 
 
 def _skip_unchanged_lists(
-    config: dict[str, Any], state: DynamoSeenJobs
+    config: dict[str, Any], state: DynamoSeenJobs, *, force: bool = False
 ) -> tuple[dict[str, Any], dict[str, str], list[str]]:
     """Remove unchanged raw GitHub lists and return revisions to commit later."""
     lists = config.get("list", [])
     if not lists:
         return config, {}, []
 
-    previous = state.source_revisions([str(src["name"]) for src in lists])
+    previous = {} if force else state.source_revisions([str(src["name"]) for src in lists])
     pending: dict[str, str] = {}
     cached: list[str] = []
     keep: list[dict[str, Any]] = []
     for src in lists:
         name = str(src["name"])
         revision = github_list_revision(src)
-        if revision and previous.get(name) == revision:
+        if not force and revision and previous.get(name) == revision:
             cached.append(name)
             continue
         keep.append(src)
@@ -458,7 +458,9 @@ def execute(seed_only: bool = False) -> dict[str, Any]:
     state = DynamoSeenJobs(table_name)
 
     tiers = {1, 2, 3} if seed_only else _active_tiers()
-    config, pending_revisions, cached_lists = _skip_unchanged_lists(config, state)
+    config, pending_revisions, cached_lists = _skip_unchanged_lists(
+        config, state, force=seed_only
+    )
 
     print(f"Fetching sources from {SOURCES_FILE.name}; active tiers={sorted(tiers)}")
     raw_jobs, source_status = fetch_all(config, tiers=tiers)
