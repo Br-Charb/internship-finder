@@ -41,6 +41,7 @@ SOURCES_FILE = ROOT / "sources.toml"
 DEFAULT_TABLE = "internship-finder-seen"
 CLAIM_LEASE_SECONDS = 15 * 60
 DISCORD_TIMEOUT_SECONDS = 15
+DEFAULT_HEALTH_FAILURE_THRESHOLD = 3
 
 
 def _utc_now() -> dt.datetime:
@@ -105,6 +106,10 @@ class DynamoSeenJobs:
     def _source_key(source_name: str) -> str:
         return "__source_revision__:" + source_name
 
+    @staticmethod
+    def _health_key(source_name: str) -> str:
+        return "__source_health__:" + source_name
+
     def source_revisions(self, source_names: list[str]) -> dict[str, str]:
         """Read cached GitHub-list revisions with the existing BatchGet grant."""
         keys = [self._source_key(name) for name in dict.fromkeys(source_names)]
@@ -139,6 +144,60 @@ class DynamoSeenJobs:
             "revision": revision,
             "updated_at": now,
         })
+
+    def source_health(self, source_names: list[str]) -> dict[str, dict[str, Any]]:
+        """Read persistent health counters using the table's existing BatchGet grant."""
+        keys = [self._health_key(name) for name in dict.fromkeys(source_names)]
+        health: dict[str, dict[str, Any]] = {}
+        for batch in _chunks(keys, 100):
+            request_items = {
+                self.table_name: {
+                    "Keys": [{"job_id": key} for key in batch],
+                    "ConsistentRead": True,
+                }
+            }
+            attempt = 0
+            while request_items:
+                response = self.resource.batch_get_item(RequestItems=request_items)
+                for item in response.get("Responses", {}).get(self.table_name, []):
+                    key = str(item.get("job_id") or "")
+                    if key.startswith("__source_health__:"):
+                        health[key.removeprefix("__source_health__:")] = item
+                request_items = response.get("UnprocessedKeys") or {}
+                if request_items:
+                    time.sleep(min(0.05 * (2 ** attempt), 2.0))
+                    attempt += 1
+        return health
+
+    def save_source_health(self, source_name: str, values: dict[str, Any]) -> None:
+        item = {
+            "job_id": self._health_key(source_name),
+            "state": "source_health",
+            "source_name": source_name,
+            "updated_at": _iso_now(),
+            **values,
+        }
+        self.table.put_item(Item=item)
+
+    def claim_daily_heartbeat(self, day: str) -> bool:
+        """Atomically reserve one health heartbeat per UTC day."""
+        try:
+            self.table.update_item(
+                Key={"job_id": "__health_heartbeat__"},
+                UpdateExpression="SET #state = :state, heartbeat_date = :day, updated_at = :now",
+                ConditionExpression="attribute_not_exists(heartbeat_date) OR heartbeat_date <> :day",
+                ExpressionAttributeNames={"#state": "state"},
+                ExpressionAttributeValues={
+                    ":state": "health_metadata",
+                    ":day": day,
+                    ":now": _iso_now(),
+                },
+            )
+        except Exception as error:
+            if _conditional_failure(error):
+                return False
+            raise
+        return True
 
     def claim(self, job: dict[str, Any], category: Category) -> str | None:
         """Claim a job unless it is delivered or held by a non-expired worker."""
@@ -249,6 +308,16 @@ class DynamoSeenJobs:
                 raise
 
 
+def _validate_webhook_url(value: str, variable_name: str) -> str:
+    parsed = urllib.parse.urlparse(value)
+    host = (parsed.hostname or "").lower()
+    if parsed.scheme != "https" or not (
+        host == "discord.com" or host.endswith(".discord.com") or host == "discordapp.com"
+    ):
+        raise ValueError(f"{variable_name} is not a Discord HTTPS webhook URL")
+    return value
+
+
 def _webhook_urls() -> dict[str, str]:
     urls: dict[str, str] = {}
     missing: list[str] = []
@@ -257,15 +326,15 @@ def _webhook_urls() -> dict[str, str]:
         if not value:
             missing.append(category.webhook_env)
             continue
-        parsed = urllib.parse.urlparse(value)
-        host = (parsed.hostname or "").lower()
-        if parsed.scheme != "https" or not (host == "discord.com" or host.endswith(".discord.com")
-                                              or host == "discordapp.com"):
-            raise ValueError(f"{category.webhook_env} is not a Discord HTTPS webhook URL")
-        urls[category.key] = value
+        urls[category.key] = _validate_webhook_url(value, category.webhook_env)
     if missing:
         raise ValueError("Missing Discord webhook environment variables: " + ", ".join(missing))
     return urls
+
+
+def _health_webhook_url() -> str | None:
+    value = os.environ.get("DISCORD_WEBHOOK_HEALTH", "").strip()
+    return _validate_webhook_url(value, "DISCORD_WEBHOOK_HEALTH") if value else None
 
 
 def _with_wait_parameter(url: str) -> str:
@@ -375,6 +444,160 @@ def test_webhooks() -> dict[str, Any]:
     return {"webhook_tests_sent": sent, "count": len(sent)}
 
 
+def _health_payload(title: str, description: str, color: int) -> dict[str, Any]:
+    return {
+        "username": "Internship Finder Health",
+        "allowed_mentions": {"parse": []},
+        "embeds": [{
+            "title": _truncate(title, 256),
+            "description": _truncate(description, 4096),
+            "color": color,
+            "timestamp": _iso_now(),
+            "footer": {"text": "AWS Lambda source monitor"},
+        }],
+    }
+
+
+def test_health_webhook() -> dict[str, Any]:
+    webhook = _health_webhook_url()
+    if webhook is None:
+        raise ValueError("Missing Discord webhook environment variable: DISCORD_WEBHOOK_HEALTH")
+    post_to_discord(
+        webhook,
+        _health_payload(
+            "Health channel connected",
+            "The internship scraper can send source failures, recoveries, and daily heartbeats here.",
+            0x2ECC71,
+        ),
+    )
+    return {"health_webhook_test": "sent"}
+
+
+def _monitor_source_health(
+    state: DynamoSeenJobs,
+    source_status: list[dict[str, Any]],
+    webhook: str,
+    summary: dict[str, Any],
+) -> dict[str, int]:
+    """Persist source streaks and send one compact health digest when needed."""
+    threshold = max(
+        1,
+        int(os.environ.get("HEALTH_FAILURE_THRESHOLD", str(DEFAULT_HEALTH_FAILURE_THRESHOLD))),
+    )
+    previous = state.source_health([str(status["name"]) for status in source_status])
+    changes: list[tuple[str, dict[str, Any], str | None]] = []
+    alerts: list[str] = []
+    recoveries = 0
+
+    for status in source_status:
+        name = str(status["name"])
+        prior = previous.get(name, {})
+        failures = int(prior.get("failure_streak") or 0)
+        zeroes = int(prior.get("zero_streak") or 0)
+        failure_alerted = bool(prior.get("failure_alerted", False))
+        zero_alerted = bool(prior.get("zero_alerted", False))
+        ever_nonzero = bool(prior.get("ever_nonzero", False))
+        event_kind: str | None = None
+        should_save = False
+
+        if not status.get("ok"):
+            failures = min(failures + 1, threshold)
+            zeroes = 0
+            should_save = failures != int(prior.get("failure_streak") or 0)
+            if failures >= threshold and not failure_alerted:
+                event_kind = "failure"
+                failure_alerted = True
+                error = _truncate(str(status.get("error") or "unknown error"), 300)
+                alerts.append(
+                    f"🔴 **{name}** failed {failures} consecutive checks — `{error}`"
+                )
+        elif int(status.get("count") or 0) == 0:
+            failures = 0
+            if ever_nonzero:
+                zeroes = min(zeroes + 1, threshold)
+                should_save = True
+                if zeroes >= threshold and not zero_alerted:
+                    event_kind = "zero"
+                    zero_alerted = True
+                    alerts.append(
+                        f"🟠 **{name}** returned 0 jobs for {zeroes} consecutive checks "
+                        "after previously returning jobs."
+                    )
+            elif prior:
+                should_save = failures != int(prior.get("failure_streak") or 0)
+        else:
+            count = int(status.get("count") or 0)
+            if failure_alerted or zero_alerted:
+                event_kind = "recovery"
+                recoveries += 1
+                alerts.append(f"🟢 **{name}** recovered and returned {count} jobs.")
+            should_save = (
+                not ever_nonzero or failures > 0 or zeroes > 0
+                or failure_alerted or zero_alerted
+            )
+            ever_nonzero = True
+            failures = zeroes = 0
+            failure_alerted = zero_alerted = False
+
+        if should_save or event_kind:
+            changes.append((name, {
+                "failure_streak": failures,
+                "zero_streak": zeroes,
+                "failure_alerted": failure_alerted,
+                "zero_alerted": zero_alerted,
+                "ever_nonzero": ever_nonzero,
+                "last_count": int(status.get("count") or 0),
+                "last_error": str(status.get("error") or "")[:500],
+            }, event_kind))
+
+    delivery_failed = 0
+    if alerts:
+        try:
+            post_to_discord(
+                webhook,
+                _health_payload("Source health update", "\n".join(alerts[:25]), 0xE67E22),
+            )
+        except Exception as error:
+            delivery_failed = 1
+            print(f"ERROR health webhook: {error}", file=sys.stderr)
+            # Failed alerts remain unacknowledged so the next eligible check retries them.
+            for _name, values, event_kind in changes:
+                if event_kind == "failure":
+                    values["failure_alerted"] = False
+                elif event_kind == "zero":
+                    values["zero_alerted"] = False
+
+    for name, values, _event_kind in changes:
+        state.save_source_health(name, values)
+
+    heartbeat_sent = 0
+    today = _utc_now().date().isoformat()
+    if state.claim_daily_heartbeat(today):
+        heartbeat_description = (
+            f"The scheduled pipeline is running. This invocation checked "
+            f"**{summary['sources_checked']}** sources, found **{summary['raw_jobs']}** raw jobs, "
+            f"and delivered **{summary['delivered']}** new alerts.\n\n"
+            f"Sources failing this check: **{len(summary['failed_sources'])}**. "
+            "Individual source alerts require consecutive failures."
+        )
+        try:
+            post_to_discord(
+                webhook,
+                _health_payload("Daily pipeline heartbeat", heartbeat_description, 0x3498DB),
+            )
+            heartbeat_sent = 1
+        except Exception as error:
+            delivery_failed += 1
+            print(f"ERROR health heartbeat: {error}", file=sys.stderr)
+
+    return {
+        "health_events": len(alerts),
+        "health_recoveries": recoveries,
+        "health_heartbeat_sent": heartbeat_sent,
+        "health_delivery_failures": delivery_failed,
+    }
+
+
 def _deduplicate(raw_jobs: list[dict[str, Any]], scope: str) -> dict[str, dict[str, Any]]:
     jobs: dict[str, dict[str, Any]] = {}
     for job in raw_jobs:
@@ -446,7 +669,11 @@ def _skip_unchanged_lists(
     return filtered, pending, cached
 
 
-def execute(seed_only: bool = False, only_sources: set[str] | None = None) -> dict[str, Any]:
+def execute(
+    seed_only: bool = False,
+    only_sources: set[str] | None = None,
+    seed_partition: tuple[int, int] | None = None,
+) -> dict[str, Any]:
     """Fetch, route, deliver, and persist one complete scan."""
     config = tomllib.loads(SOURCES_FILE.read_text(encoding="utf-8"))
     scope = os.environ.get("JOB_SCOPE", "internships")
@@ -467,12 +694,15 @@ def execute(seed_only: bool = False, only_sources: set[str] | None = None) -> di
     )
 
     scope_note = f" selected={sorted(only_sources)}" if only_sources else ""
+    if seed_partition is not None:
+        scope_note += f" seed_partition={seed_partition[0] + 1}/{seed_partition[1]}"
     print(f"Fetching sources from {SOURCES_FILE.name}; slot={schedule_slot}{scope_note}")
     raw_jobs, source_status = fetch_all(
         config,
         tiers=tiers,
         only=only_sources,
         schedule_slot=schedule_slot,
+        partition=seed_partition,
     )
     jobs_by_id = _deduplicate(raw_jobs, scope)
     known = state.known_ids(list(jobs_by_id))
@@ -560,6 +790,10 @@ def execute(seed_only: bool = False, only_sources: set[str] | None = None) -> di
     summary = {
         "active_tiers": sorted({int(status["tier"]) for status in source_status}),
         "schedule_slot": schedule_slot,
+        "seed_partition": (
+            {"index": seed_partition[0], "count": seed_partition[1]}
+            if seed_partition is not None else None
+        ),
         "sources_checked": len(source_status),
         "raw_jobs": len(raw_jobs),
         "eligible_unique_jobs": len(jobs_by_id),
@@ -581,6 +815,25 @@ def execute(seed_only: bool = False, only_sources: set[str] | None = None) -> di
         "failed_sources": failed_sources,
     }
 
+    health_summary = {
+        "health_events": 0,
+        "health_recoveries": 0,
+        "health_heartbeat_sent": 0,
+        "health_delivery_failures": 0,
+    }
+    if not seed_only:
+        try:
+            health_webhook = _health_webhook_url()
+            if health_webhook:
+                health_summary = _monitor_source_health(
+                    state, source_status, health_webhook, summary
+                )
+        except Exception as error:
+            # Monitoring must never stop job notifications or mark them failed.
+            health_summary["health_delivery_failures"] += 1
+            print(f"ERROR source health monitor: {error}", file=sys.stderr)
+    summary.update(health_summary)
+
     # Only mark a list revision consumed after its fetch succeeded and all
     # notifications from this pass were handled. Otherwise the same revision is
     # retried, preserving delivery backlog and recovery from transient errors.
@@ -598,6 +851,10 @@ def execute(seed_only: bool = False, only_sources: set[str] | None = None) -> di
 def lambda_handler(event: dict[str, Any] | None, context: Any) -> dict[str, Any]:
     """AWS Lambda handler with baseline and webhook-test modes."""
     event = event or {}
+    if event.get("test_health_webhook"):
+        if event.get("test_webhooks") or event.get("seed_only"):
+            raise ValueError("test_health_webhook cannot be combined with another mode")
+        return test_health_webhook()
     if event.get("test_webhooks"):
         if event.get("seed_only"):
             raise ValueError("test_webhooks and seed_only cannot both be true")
@@ -610,8 +867,34 @@ def lambda_handler(event: dict[str, Any] | None, context: Any) -> dict[str, Any]
         raise ValueError("seed_sources must be a source name or a list of source names")
     if requested and not seed_only:
         raise ValueError("seed_sources requires seed_only=true")
+    partition_index = event.get("seed_partition")
+    partition_count = event.get("seed_partition_count")
+    if (partition_index is None) != (partition_count is None):
+        raise ValueError("seed_partition and seed_partition_count must be supplied together")
+    seed_partition = None
+    if partition_index is not None:
+        if not seed_only:
+            raise ValueError("seed_partition requires seed_only=true")
+        if requested:
+            raise ValueError("use either seed_sources or seed_partition, not both")
+        if isinstance(partition_index, bool) or isinstance(partition_count, bool):
+            raise ValueError("seed partition values must be integers")
+        try:
+            partition_index = int(partition_index)
+            partition_count = int(partition_count)
+        except (TypeError, ValueError) as error:
+            raise ValueError("seed partition values must be integers") from error
+        if partition_count < 1 or partition_count > 100:
+            raise ValueError("seed_partition_count must be between 1 and 100")
+        if partition_index < 0 or partition_index >= partition_count:
+            raise ValueError("seed_partition must be from 0 through seed_partition_count - 1")
+        seed_partition = (partition_index, partition_count)
     only_sources = {name.strip() for name in requested if name.strip()} or None
-    return execute(seed_only=seed_only, only_sources=only_sources)
+    return execute(
+        seed_only=seed_only,
+        only_sources=only_sources,
+        seed_partition=seed_partition,
+    )
 
 
 def main() -> int:

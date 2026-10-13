@@ -181,6 +181,24 @@ class ExecutionTests(unittest.TestCase):
         self.assertEqual(first + 1, run._five_minute_slot(top_of_hour + dt.timedelta(minutes=5)))
         self.assertEqual(first + 12, run._five_minute_slot(top_of_hour + dt.timedelta(hours=1)))
 
+    @patch.object(run, "execute", return_value={"seeded": 0})
+    def test_partitioned_seed_event(self, execute):
+        result = run.lambda_handler({
+            "seed_only": True,
+            "seed_partition": 3,
+            "seed_partition_count": 12,
+        }, None)
+        self.assertEqual({"seeded": 0}, result)
+        execute.assert_called_once_with(
+            seed_only=True,
+            only_sources=None,
+            seed_partition=(3, 12),
+        )
+
+    def test_partition_requires_seed_mode(self):
+        with self.assertRaisesRegex(ValueError, "requires seed_only"):
+            run.lambda_handler({"seed_partition": 0, "seed_partition_count": 12}, None)
+
     def test_discord_embed_layout_and_graduation(self):
         job = {
             **JOBS[0],

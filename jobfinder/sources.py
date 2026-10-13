@@ -654,13 +654,16 @@ def fetch_all(
     tiers: set[int] | None = None,
     only: set[str] | None = None,
     schedule_slot: int | None = None,
+    partition: tuple[int, int] | None = None,
 ) -> tuple[list[dict], list[dict]]:
     """Return ``(jobs, source_status)`` without letting one source stop a run.
 
     ``tier`` defaults to 1. The Lambda runner uses tier 1 every five minutes,
     tier 2 every fifteen minutes, and tier 3 hourly. Lower tiers are assigned a
     stable slot so a large catalog is spread across invocations. ``only`` is
-    used by verification and batch seeding and bypasses slot staggering.
+    used by verification and named-source seeding and bypasses slot staggering.
+    ``partition`` is ``(index, count)`` and deterministically divides the full
+    catalog into disjoint batches for Lambda-safe baseline seeding.
     """
     selected_names = {name.casefold() for name in (only or set())}
     tasks = []  # (label, kind, tier, host-group, callable)
@@ -672,9 +675,13 @@ def fetch_all(
             return
         if selected_names and label.casefold() not in selected_names:
             return
+        digest = hashlib.sha256(label.casefold().encode("utf-8")).digest()
+        if partition is not None:
+            partition_index, partition_count = partition
+            if int.from_bytes(digest[:4], "big") % partition_count != partition_index:
+                return
         if schedule_slot is not None and not selected_names:
             cadence = {1: 1, 2: 3, 3: 12}[tier]
-            digest = hashlib.sha256(label.casefold().encode("utf-8")).digest()
             assigned_slot = int.from_bytes(digest[:4], "big") % cadence
             if schedule_slot % cadence != assigned_slot:
                 return

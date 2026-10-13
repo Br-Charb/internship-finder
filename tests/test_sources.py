@@ -95,6 +95,20 @@ class SourceAdapterTests(unittest.TestCase):
         )
         self.assertEqual(["Hourly"], [status["name"] for status in statuses])
 
+    @patch.object(sources.time, "sleep")
+    @patch.object(sources, "fetch_greenhouse", return_value=[])
+    def test_partitions_cover_each_source_exactly_once(self, _fetch_greenhouse, _sleep):
+        cfg = {"greenhouse": [
+            {"name": f"Company {number}", "board": f"board-{number}", "tier": 1}
+            for number in range(30)
+        ]}
+        observed = []
+        for index in range(7):
+            _, statuses = sources.fetch_all(cfg, partition=(index, 7))
+            observed.extend(status["name"] for status in statuses)
+        self.assertEqual(sorted(entry["name"] for entry in cfg["greenhouse"]), sorted(observed))
+        self.assertEqual(len(observed), len(set(observed)))
+
 
 if __name__ == "__main__":
     unittest.main()
