@@ -1,3 +1,5 @@
 __pycache__/
 *.pyc
 .claude/
+.lambda-build/
+internship-finder-lambda.zip
