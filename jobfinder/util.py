@@ -1,7 +1,4 @@
-"""Small helpers: HTTP requests, HTML-to-text, keyword matching, URL keys.
-
-Standard library only, so the GitHub Action needs no pip installs.
-"""
+"""Small helpers: HTTP requests, HTML-to-text, keyword matching, and URL keys."""
 from __future__ import annotations
 
 import gzip
@@ -12,7 +9,7 @@ import time
 import urllib.error
 import urllib.request
 
-USER_AGENT = "aero-job-finder/1.0 (personal internship search; github.com/jonasagront/aero-job-finder)"
+USER_AGENT = "internship-finder-lambda/2.0 (personal internship search)"
 
 
 class FetchError(Exception):
@@ -104,6 +101,9 @@ _GH_EMBED = re.compile(r"greenhouse\.io/embed/job_app\?(?:.*&)?for=([\w-]+).*?to
 _GH_JID = re.compile(r"[?&]gh_jid=(\d+)")
 _LEVER = re.compile(r"jobs\.lever\.co/([\w.-]+)/([0-9a-f-]{36})")
 _ASHBY = re.compile(r"jobs\.ashbyhq\.com/([^/?#]+)/([0-9a-f-]{36})")
+_SMART_API = re.compile(r"api\.smartrecruiters\.com/v1/companies/([^/?#]+)/postings/([^/?#]+)")
+_SMART_JOBS = re.compile(r"jobs\.smartrecruiters\.com/([^/?#]+)/([^/?#]+)")
+_RIPPLING = re.compile(r"ats\.rippling\.com/(?:[a-z]{2}(?:-[A-Z]{2})?/)?([^/?#]+)/jobs/([0-9a-f-]{36})")
 _WORKDAY = re.compile(
     r"https?://([\w-]+)\.(wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([^/?#]+)(/job/[^?#]+)")
 
@@ -121,6 +121,13 @@ def parse_ats_url(url: str) -> dict | None:
     m = _ASHBY.search(url)
     if m:
         return {"ats": "ashby", "board": m.group(1), "id": m.group(2)}
+    m = _SMART_API.search(url) or _SMART_JOBS.search(url)
+    if m:
+        job_id = m.group(2).split("-", 1)[0] if m.re is _SMART_JOBS else m.group(2)
+        return {"ats": "smartrecruiters", "board": m.group(1), "id": job_id}
+    m = _RIPPLING.search(url)
+    if m:
+        return {"ats": "rippling", "board": m.group(1), "id": m.group(2)}
     m = _WORKDAY.search(url)
     if m:
         tenant, wd, site, path = m.groups()

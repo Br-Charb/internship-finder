@@ -1,313 +1,346 @@
-"""Decide whether a posting is a Summer 2027 aerospace internship, and how
-well it fits your resume.
+"""Job filtering, category selection, and requirement-snippet extraction.
 
-Score out of 100:
-  up to 40  how clearly it's aerospace engineering work
-  up to 35  how many of your skills the posting asks for
-  up to 25  eligibility (season, class year, grad date, degree level)
+The source adapters in :mod:`jobfinder.sources` normalize ATS-specific payloads.
+This module is deliberately independent of AWS and Discord so routing can be
+tested locally.
 """
 from __future__ import annotations
 
-import datetime as dt
 import re
-
-from .util import compile_terms, hits
-
-INTERN_RX = re.compile(r"(?i)(?<![a-z])(intern|interns|internship|internships|co-?op|co op|student trainee|student)(?![a-z])")
-
-SEASON_WORDS = r"(summer|fall|autumn|spring|winter)"
-SEASON_RX = re.compile(rf"(?i)(?<![a-z]){SEASON_WORDS}\s*(?:of\s*)?'?(20)?(2[5-9]|3[0-1])(?![0-9])"
-                       rf"|(?<![0-9])(20)?(2[5-9]|3[0-1])\s*{SEASON_WORDS}")
-MONTH_START_RX = re.compile(r"(?i)(may|june)\s+(?:\d{1,2},?\s+)?(20\d\d)")
-GRAD_RX = re.compile(r"(?i)graduat\w*")
-YEAR_RX = re.compile(r"(?<![0-9])(20[2-3]\d)(?![0-9])")
-GPA_RX = re.compile(
-    r"(?i)(?:gpa|grade point average)[^.\n]{0,40}?([2-4]\.\d{1,2})"
-    r"|([2-4]\.\d{1,2})\s*(?:/\s*4\.0\s*)?(?:cumulative\s*|overall\s*|minimum\s*)?(?:gpa|grade point)")
-CITIZEN_RX = re.compile(
-    r"(?i)u\.?\s?s\.?\s+citizen|united states citizen|u\.?\s?s\.?\s+person|\bitar\b|"
-    r"export[- ]control|lawful permanent resident|green card|citizenship is required")
-CLEARANCE_RX = re.compile(
-    r"(?i)security clearance|secret clearance|top secret|ts/sci|obtain (?:and maintain )?(?:a |an )?"
-    r"(?:dod |government )?clearance|clearance (?:is )?required")
-GRAD_DEGREE_ONLY_RX = re.compile(
-    r"(?i)(pursuing|enrolled in) an? (master'?s|ph\.?d|doctoral|graduate) (degree|program)"
-    r"(?! or)(?!.{0,30}bachelor)|graduate students only|ph\.?d\.? (candidate|student)s? only")
-SENIOR_ONLY_RX = re.compile(r"(?i)rising senior|senior standing|senior[- ]level student|final[- ]year student")
-JUNIOR_RX = re.compile(r"(?i)(?<![a-z])(rising )?juniors?(?![a-z])")
-UNDERCLASS_RX = re.compile(r"(?i)sophomore|freshm[ae]n|first[- ]year|underclass|all (class )?(levels|years)|any (class )?(level|year)")
-COMPLETED_YEARS_RX = re.compile(r"(?i)complet\w* (?:at least |a minimum of )?(one|two|three|four|1|2|3|4) (?:full )?(?:academic )?years?")
-WORDNUM = {"one": 1, "two": 2, "three": 3, "four": 4, "1": 1, "2": 2, "3": 3, "4": 4}
+from dataclasses import dataclass, field
 
 
-class Matcher:
-    def __init__(self, profile: dict, sources_cfg: dict):
-        self.p = profile
-        st = profile["student"]
-        se = profile["search"]
-        self.grad_year = int(st["graduation_year"])
-        self.gpa = float(st.get("gpa") or 0)
-        self.season = se.get("season", "summer").lower()
-        self.year = int(se.get("year", 2027))
-        self.keep_unstated = bool(se.get("include_unstated_season", True))
-        self.min_score = int(se.get("min_score", 40))
-        self.max_age = int(se.get("max_age_days", 150))
-        # Years of school finished by the internship summer (2029 grad -> 2 -> rising junior)
-        self.completed_years = max(0, 4 - (self.grad_year - self.year))
+_INTERNSHIP_TITLE = re.compile(
+    r"(?i)(?<![a-z])(intern(?:ship)?|co[ -]?op|student(?: trainee)?|trainee|"
+    r"apprentic(?:e|eship)|new[ -]?grad(?:uate)?|university[ -]?grad(?:uate)?|"
+    r"early[ -]?career|summer(?:\s+[a-z&]+){0,3}\s+(?:analyst|associate))(?![a-z])"
+)
 
-        rel = profile["relevance"]
-        self.t_strong = compile_terms(rel["title_strong"])
-        self.t_medium = compile_terms(rel["title_medium"])
-        self.t_weak = compile_terms(rel["title_weak"])
-        self.text_kw = compile_terms(rel["text_keywords"])
-        self.majors = {k.lower(): v for k, v in rel.get("majors", {}).items()}
-        self.exclude = compile_terms(rel.get("exclude", {}).get("title", []))
-        self.exclude_always = compile_terms(rel.get("exclude", {}).get("title_always", []))
+_NON_TARGET_TITLE = re.compile(
+    r"(?i)(?<![a-z])(sales|marketing|recruit(?:er|ing)|talent acquisition|human resources|"
+    r"legal|counsel|customer success|customer support|communications?|public relations|"
+    r"business development)(?![a-z])"
+)
 
-        self.skills = []
-        for s in profile.get("skill", []):
-            self.skills.append({
-                "name": s["name"], "weight": int(s.get("weight", 1)),
-                "aliases": compile_terms(s.get("aliases", [])),
-                "related": compile_terms(s.get("related", [])),
-            })
-        self.gaps = [{"name": g["name"], "aliases": compile_terms(g.get("aliases", []))}
-                     for g in profile.get("gap", [])]
-        self.aero_companies = [n.lower() for n in sources_cfg.get("aerospace_companies", {}).get("names", [])]
-        self.qc = None  # set by run.py to a quals.QualChecker
 
-    # ---------------------------------------------------------- quick filter
+def is_target_job(title: str, scope: str = "internships", employment_type: str = "") -> bool:
+    """Return whether a posting belongs in this internship-oriented feed.
 
-    def title_ok(self, title: str) -> tuple[bool, str]:
-        """Cheap check before fetching anything else."""
-        t = title.lower()
-        if not INTERN_RX.search(t):
-            return False, "not an internship"
-        if hits(self.exclude_always, t):
-            return False, "graduate-student role"
-        if hits(self.exclude, t) and not hits(self.t_strong, t):
-            return False, "not an engineering role"
-        return True, ""
+    Set ``JOB_SCOPE=all`` in Lambda to route every categorized posting from the
+    configured ATS boards instead.
+    """
+    title = title or ""
+    if _NON_TARGET_TITLE.search(title):
+        return False
+    if scope.lower() == "all":
+        return True
+    return bool(
+        _INTERNSHIP_TITLE.search(title)
+        or re.search(r"(?i)(?<![a-z])(intern(?:ship)?|co[ -]?op|apprentice)(?![a-z])", employment_type or "")
+    )
 
-    def is_aero_company(self, company: str) -> bool:
-        c = company.lower()
-        return any(n in c for n in self.aero_companies)
 
-    # ---------------------------------------------------------- season
+def _compile_term(term: str) -> re.Pattern[str]:
+    """Compile a literal keyword with useful word boundaries."""
+    escaped = re.escape(term.strip().lower()).replace(r"\ ", r"[\s-]+")
+    return re.compile(r"(?<![a-z0-9])" + escaped + r"(?![a-z0-9])", re.IGNORECASE)
 
-    def season_of(self, job: dict, text: str) -> tuple[str, str]:
-        """Returns (status, label). status: match | unstated | other"""
-        hint = (job.get("season_hint") or "").lower()
-        target = f"{self.season} {self.year}"
-        if hint:
-            if target in hint:
-                return "match", target.title()
-            return "other", hint.title()
-        found = set()
-        for m in SEASON_RX.finditer(text):
-            s1, _c1, y1, _c2, y2, s2 = m.groups()
-            season = (s1 or s2 or "").lower().replace("autumn", "fall")
-            year = 2000 + int(y1 or y2)
-            found.add((season, year))
-        for m in MONTH_START_RX.finditer(text):
-            if int(m.group(2)) == self.year:
-                found.add(("summer", self.year))
-        if (self.season, self.year) in found:
-            return "match", target.title()
-        if found:
-            # Only another season/year named, like "Fall 2026" or "Summer 2026"
-            s, y = sorted(found, key=lambda x: (x[1], x[0]))[-1]
-            return "other", f"{s.title()} {y}"
-        if re.search(rf"(?i)(?<![a-z]){self.season}(?![a-z])", text):
-            return "unstated", f"{self.season.title()} (year not stated)"
-        return "unstated", "Season not stated"
 
-    # ---------------------------------------------------------- eligibility
+@dataclass(frozen=True)
+class Category:
+    key: str
+    label: str
+    webhook_env: str
+    color: int
+    title_terms: tuple[str, ...]
+    description_terms: tuple[str, ...]
+    strong_title_terms: tuple[str, ...] = ()
+    _title_patterns: tuple[re.Pattern[str], ...] = field(init=False, repr=False)
+    _description_patterns: tuple[re.Pattern[str], ...] = field(init=False, repr=False)
+    _strong_patterns: tuple[re.Pattern[str], ...] = field(init=False, repr=False)
 
-    def grad_check(self, text: str) -> tuple[bool, str] | None:
-        """Look for graduation-date windows like 'graduating between Dec 2026 and May 2028'."""
-        problems, oks = [], []
-        for m in GRAD_RX.finditer(text):
-            window = text[max(0, m.start() - 30): m.end() + 110]
-            years = sorted({int(y) for y in YEAR_RX.findall(window)})
-            years = [y for y in years if 2025 <= y <= 2032]
-            if not years:
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "_title_patterns", tuple(_compile_term(t) for t in self.title_terms))
+        object.__setattr__(self, "_description_patterns", tuple(_compile_term(t) for t in self.description_terms))
+        object.__setattr__(self, "_strong_patterns", tuple(_compile_term(t) for t in self.strong_title_terms))
+
+    def score(self, title: str, description: str) -> tuple[int, list[str]]:
+        title_hits = [term for term, rx in zip(self.title_terms, self._title_patterns) if rx.search(title)]
+        desc_hits = [
+            term for term, rx in zip(self.description_terms, self._description_patterns)
+            if rx.search(description)
+        ]
+        strong_hits = [
+            term for term, rx in zip(self.strong_title_terms, self._strong_patterns) if rx.search(title)
+        ]
+        # Titles communicate the discipline more reliably than boilerplate in a
+        # long description. Strong phrases break common ties such as "systems".
+        score = 6 * len(title_hits) + min(len(desc_hits), 8) + 10 * len(strong_hits)
+        return score, strong_hits + title_hits + desc_hits
+
+
+# Tie order is intentional: a discipline-specific engineering match beats the
+# generic Finance keyword "analyst" (for example, "Propulsion Analyst Intern").
+CATEGORIES: tuple[Category, ...] = (
+    Category(
+        key="aerospace",
+        label="Aerospace Engineering",
+        webhook_env="DISCORD_WEBHOOK_AEROSPACE",
+        color=0x5865F2,
+        title_terms=(
+            "aerospace", "aerodynamics", "aeronautical", "astronautical", "avionics",
+            "flight dynamics", "flight test", "gnc", "guidance navigation and control",
+            "mission design", "orbital", "propulsion", "rocket", "spacecraft", "satellite",
+        ),
+        description_terms=(
+            "aerodynamics", "aerospace engineering", "aircraft", "astrodynamics", "avionics",
+            "cfd", "flight controls", "gnc", "guidance navigation and control", "launch vehicle",
+            "orbital mechanics", "propulsion", "rocket", "spacecraft", "satellite",
+        ),
+        strong_title_terms=("aerospace engineer", "aerodynamics engineer", "propulsion engineer", "gnc engineer"),
+    ),
+    Category(
+        key="mechanical",
+        label="Mechanical Engineering",
+        webhook_env="DISCORD_WEBHOOK_MECHANICAL",
+        color=0xF1C40F,
+        title_terms=(
+            "mechanical", "mechanisms", "product design", "manufacturing", "tooling",
+            "industrial engineering", "structural", "structures", "thermal", "thermodynamics",
+            "fluids", "fluid systems", "stress engineer", "materials engineer", "vehicle dynamics",
+            "automotive", "reliability engineer", "additive manufacturing", "composites",
+        ),
+        description_terms=(
+            "cad", "catia", "creo", "solidworks", "siemens nx", "autocad", "fusion 360",
+            "fea", "finite element", "ansys", "abaqus", "nastran", "gd&t", "tolerance stack",
+            "heat transfer", "thermal analysis", "thermal management", "thermodynamics",
+            "fluid mechanics", "cfd", "mechanical design", "mechanical engineering",
+            "structural analysis", "stress analysis", "manufacturing engineering", "dfm",
+            "design for manufacturing", "machining", "cnc", "injection molding", "sheet metal",
+            "additive manufacturing", "3d printing", "composites", "materials science",
+            "prototyping", "mechanisms", "plm", "windchill",
+        ),
+        strong_title_terms=(
+            "mechanical engineer", "mechanical design engineer", "thermal engineer",
+            "structures engineer", "structural engineer", "manufacturing engineer",
+            "product design engineer", "stress engineer", "fluids engineer",
+        ),
+    ),
+    Category(
+        key="hardware",
+        label="Hardware / Embedded / Computer Engineering",
+        webhook_env="DISCORD_WEBHOOK_HARDWARE",
+        color=0xE67E22,
+        title_terms=(
+            "computer engineering", "electrical", "electronics", "embedded", "firmware", "fpga",
+            "hardware", "pcb", "board design", "power electronics", "power systems", "rf",
+            "radio frequency", "antenna", "robotics", "mechatronics", "controls engineer",
+            "systems engineer", "asic", "silicon", "semiconductor", "digital design",
+            "analog design", "mixed signal", "chip design", "soc", "rtl", "verification engineer",
+            "signal integrity", "test hardware", "electromechanical",
+        ),
+        description_terms=(
+            "circuit design", "computer engineering", "electrical engineering", "embedded systems",
+            "firmware", "fpga", "asic", "microcontroller", "microprocessor", "bare metal", "rtos",
+            "arm cortex", "embedded c", "device driver", "bootloader", "spi", "i2c", "uart",
+            "can bus", "pcb", "printed circuit board", "schematic capture", "board bring-up",
+            "altium", "cadence", "orcad", "signal integrity", "power integrity", "oscilloscope",
+            "logic analyzer", "digital electronics", "analog circuits", "mixed signal",
+            "power electronics", "motor control", "control systems", "sensors", "actuators",
+            "signal processing", "rf design", "wireless", "antenna", "emi", "emc",
+            "systems engineering", "verilog", "systemverilog", "vhdl", "rtl", "soc",
+            "semiconductor", "silicon validation", "hardware validation",
+        ),
+        strong_title_terms=(
+            "electrical engineer", "electronics engineer", "computer engineer", "embedded engineer",
+            "firmware engineer", "fpga engineer", "hardware engineer", "asic engineer",
+            "pcb engineer", "rf engineer", "digital design engineer", "analog design engineer",
+        ),
+    ),
+    Category(
+        key="software",
+        label="Software Engineering",
+        webhook_env="DISCORD_WEBHOOK_SOFTWARE",
+        color=0x2ECC71,
+        title_terms=(
+            "software", "frontend", "front end", "backend", "back end", "full stack", "fullstack",
+            "web developer", "mobile developer", "ios", "android", "devops", "site reliability",
+            "machine learning", "data engineer", "cloud engineer", "swe",
+        ),
+        description_terms=(
+            "python", "java", "c++", "c#", "javascript", "typescript", "react", "node.js",
+            "software engineering", "api", "sql", "aws", "cloud computing", "kubernetes",
+            "docker", "git", "linux", "data structures", "algorithms",
+        ),
+        strong_title_terms=("software engineer", "frontend engineer", "backend engineer", "full stack engineer"),
+    ),
+    Category(
+        key="finance",
+        label="Finance / Info Systems / FinTech",
+        webhook_env="DISCORD_WEBHOOK_FINANCE",
+        color=0x9B59B6,
+        title_terms=(
+            "finance", "financial", "fp&a", "fintech", "analyst", "accounting", "audit",
+            "treasury", "tax", "actuarial", "underwriting", "credit", "banking",
+            "investment banking", "capital markets", "asset management", "wealth management",
+            "portfolio", "private equity", "venture capital", "quantitative", "quant",
+            "trading", "trader", "payments", "payment operations", "fraud", "risk analyst",
+            "business analyst", "operations analyst", "business systems", "information systems",
+            "management information systems", "information technology", "business intelligence",
+            "enterprise systems", "erp", "cybersecurity", "it audit", "it",
+        ),
+        description_terms=(
+            "financial analysis", "financial modeling", "fp&a", "fintech", "accounting",
+            "audit", "treasury", "corporate finance", "investment banking", "capital markets",
+            "asset management", "wealth management", "portfolio management", "private equity",
+            "venture capital", "equity research", "fixed income", "securities", "derivatives",
+            "quantitative finance", "algorithmic trading", "financial markets", "risk management",
+            "credit risk", "market risk", "operational risk", "underwriting", "actuarial",
+            "payments", "payment processing", "banking", "fraud detection", "financial technology",
+            "information systems", "management information systems", "information technology",
+            "business systems", "enterprise systems", "business intelligence", "erp", "sap",
+            "oracle financials", "data analytics", "power bi", "tableau", "excel", "vba",
+        ),
+        strong_title_terms=(
+            "financial analyst", "finance analyst", "fp&a", "quantitative analyst",
+            "quantitative researcher", "quantitative trader", "investment banking",
+            "asset management", "risk analyst", "actuarial analyst", "information systems",
+            "business systems analyst", "fintech", "payments analyst",
+        ),
+    ),
+)
+
+CATEGORY_BY_KEY = {category.key: category for category in CATEGORIES}
+
+
+def categorize_job(title: str, description: str) -> tuple[Category | None, list[str]]:
+    """Choose one primary category and return its matching keywords.
+
+    A title keyword is sufficient. If the title is generic, at least two distinct
+    description keywords are required, which avoids classifying every engineering
+    role as software merely because its boilerplate mentions Python once.
+    """
+    title = (title or "").lower()
+    description = (description or "").lower()
+    ranked: list[tuple[int, int, Category, list[str]]] = []
+    for priority, category in enumerate(CATEGORIES):
+        score, hits = category.score(title, description)
+        title_match = any(rx.search(title) for rx in category._title_patterns + category._strong_patterns)
+        description_hit_count = sum(bool(rx.search(description)) for rx in category._description_patterns)
+        if title_match or description_hit_count >= 2:
+            ranked.append((score, -priority, category, hits))
+    if not ranked:
+        return None, []
+    _, _, category, hits = max(ranked, key=lambda row: (row[0], row[1]))
+    return category, list(dict.fromkeys(hits))
+
+
+_REQUIREMENTS_HEADING = re.compile(
+    r"(?i)^(minimum |basic |preferred )?(requirements?|qualifications?|what you(?:'|’)ll need|"
+    r"what we(?:'|’)re looking for|you have|skills)(?:\s+and\s+experience)?\s*:?$"
+)
+_OTHER_HEADING = re.compile(
+    r"(?i)^(responsibilities|what you(?:'|’)ll do|about|benefits|compensation|salary|"
+    r"equal opportunity|physical demands|working conditions)\s*:?$"
+)
+_BULLET = re.compile(r"^\s*(?:[-*•▪◦‣]|\d+[.)])\s*")
+
+
+def requirements_snippet(description: str, limit: int = 750) -> str:
+    """Extract a short, Discord-safe requirements excerpt from plain job text."""
+    if not description:
+        return "Requirements were not included by this source. Open the posting for details."
+
+    lines = [re.sub(r"\s+", " ", line).strip() for line in description.splitlines()]
+    start = next((i + 1 for i, line in enumerate(lines) if _REQUIREMENTS_HEADING.match(line)), None)
+    selected: list[str] = []
+    if start is not None:
+        for line in lines[start:]:
+            if not line:
                 continue
-            w = window.lower()
-            lo, hi = min(years), max(years)
-            if re.search(r"or later|or after|and later|and beyond|after", w) and len(years) == 1:
-                ok = self.grad_year >= lo
-            elif re.search(r"or (before|earlier|sooner)|no later than|prior to|by ", w) and len(years) == 1:
-                ok = self.grad_year <= hi
-            elif len(years) >= 2:
-                ok = lo <= self.grad_year <= hi
-            else:
-                ok = self.grad_year == lo
-            label = f"{lo}" if lo == hi else f"{lo}\u2013{hi}"
-            (oks if ok else problems).append(label)
-        if problems:
-            return False, problems[0]
-        if oks:
-            return True, oks[0]
-        return None
+            if _OTHER_HEADING.match(line) or (_REQUIREMENTS_HEADING.match(line) and selected):
+                break
+            clean = _BULLET.sub("", line).strip()
+            if 8 <= len(clean) <= 350:
+                selected.append(clean)
+            if len(selected) == 3:
+                break
 
-    def class_check(self, text: str) -> tuple[str, str] | None:
-        """Returns (kind, label) where kind is good | warn."""
-        if UNDERCLASS_RX.search(text):
-            return "good", "Open to underclassmen"
-        m = COMPLETED_YEARS_RX.search(text)
-        if m and WORDNUM[m.group(1).lower()] > self.completed_years:
-            return "warn", f"Wants {WORDNUM[m.group(1).lower()]}+ years completed"
-        if SENIOR_ONLY_RX.search(text) and not JUNIOR_RX.search(text):
-            return "warn", "Seniors only?"
-        return None
+    if not selected:
+        sentences = re.split(r"(?<=[.!?])\s+|\n+", description)
+        signal = re.compile(r"(?i)\b(required|qualification|experience|proficien|degree|knowledge of)\b")
+        selected = [re.sub(r"\s+", " ", sentence).strip() for sentence in sentences if signal.search(sentence)][:2]
 
-    # ---------------------------------------------------------- main
+    if not selected:
+        selected = [re.sub(r"\s+", " ", description).strip()]
 
-    def analyze(self, job: dict) -> tuple[dict | None, str]:
-        """Returns (analysis, drop_reason). analysis is None when the job is dropped."""
-        title = job.get("title", "")
-        desc = job.get("description") or ""
-        t = title.lower()
-        d = desc.lower()
-        full = f"{t}\n{d}"
+    snippet = "\n".join(f"• {line}" for line in selected if line)
+    if len(snippet) <= limit:
+        return snippet
+    return snippet[: limit - 1].rsplit(" ", 1)[0] + "…"
 
-        ok, why = self.title_ok(title)
-        if not ok:
-            return None, why
 
-        # Too old?
-        if job.get("posted"):
-            try:
-                age = (dt.date.today() - dt.date.fromisoformat(job["posted"][:10])).days
-                if age > self.max_age:
-                    return None, "posting too old"
-            except ValueError:
-                pass
+_ACADEMIC_DATE_TEXT = (
+    r"(?:(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|"
+    r"jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|"
+    r"dec(?:ember)?|spring|summer|fall|autumn|winter)\s+20\d{2}|20\d{2})"
+)
+_ACADEMIC_DATE = re.compile(_ACADEMIC_DATE_TEXT, re.IGNORECASE)
+_GRADUATION_TRIGGER = re.compile(
+    r"(?i)(?:graduat(?:e|es|ed|ing|ion)|class\s+of|"
+    r"(?:expected|anticipated)\s+(?:degree\s+)?completion|"
+    r"degree\s+(?:completion|conferral)\s+date)"
+)
+_MONTHS = {
+    "january": "Jan", "jan": "Jan", "february": "Feb", "feb": "Feb",
+    "march": "Mar", "mar": "Mar", "april": "Apr", "apr": "Apr",
+    "may": "May", "june": "Jun", "jun": "Jun", "july": "Jul", "jul": "Jul",
+    "august": "Aug", "aug": "Aug", "september": "Sep", "sept": "Sep", "sep": "Sep",
+    "october": "Oct", "oct": "Oct", "november": "Nov", "nov": "Nov",
+    "december": "Dec", "dec": "Dec",
+}
 
-        season_status, season_label = self.season_of(job, full)
-        if season_status == "other":
-            return None, "different season"
-        if season_status == "unstated" and not self.keep_unstated:
-            return None, "season not stated"
 
-        # ---- relevance (0-40)
-        strong, medium, weak = hits(self.t_strong, t), hits(self.t_medium, t), hits(self.t_weak, t)
-        best = 3 if strong else 2 if medium else 1 if weak else 0
-        text_hits = hits(self.text_kw, d)
-        major_pts = max([v for k, v in self.majors.items() if k in d] or [0])
-        aero_co = self.is_aero_company(job.get("company", ""))
+def _normalize_academic_date(value: str) -> str:
+    parts = value.strip().split()
+    if len(parts) == 1:
+        return parts[0]
+    first = parts[0].lower()
+    label = _MONTHS.get(first, first.title())
+    if label == "Autumn":
+        label = "Fall"
+    return f"{label} {parts[-1]}"
 
-        if desc:
-            if best == 0 and len(text_hits) < 3 and major_pts < 6:
-                return None, "not aerospace"
-            if best == 1 and len(text_hits) < 2 and major_pts < 6 and not aero_co:
-                return None, "not aerospace"
-        else:
-            if best == 0 or (best == 1 and not aero_co):
-                return None, "not aerospace"
 
-        relevance = {3: 22, 2: 14, 1: 6, 0: 0}[best]
-        relevance += 4 * min(2, max(0, len(strong) + len(medium) - 1))
-        relevance += min(10, 2 * len(text_hits))
-        relevance += major_pts
-        relevance += 6 if aero_co else 0
-        relevance = min(40, relevance)
+def graduation_window(description: str) -> str:
+    """Extract an explicitly stated graduation date/range, otherwise ``?``.
 
-        # ---- skills (0-35)
-        matched, related, gaps = [], [], []
-        related_terms = set()
-        if desc:
-            weight = 0.0
-            for s in self.skills:
-                found = hits(s["aliases"], full)
-                if found:
-                    matched.append(s["name"])
-                    # A posting that mentions a skill several ways leans on it hard
-                    weight += s["weight"] * (1 + 0.5 * min(2, len(found) - 1))
-                else:
-                    rel = hits(s["related"], full)
-                    if rel:
-                        tool = rel[0].rstrip("*")
-                        tool = tool.upper() if len(tool) <= 5 else tool.title()
-                        related.append(f"{tool} (close to {s['name']})")
-                        related_terms.update(r.rstrip("*") for r in rel)
-                        weight += s["weight"] / 2
-            for g in self.gaps:
-                g_hits = hits(g["aliases"], d)
-                if g_hits and not (set(h.rstrip("*") for h in g_hits) <= related_terms):
-                    gaps.append(g["name"])
-            skills_pts = min(35, round(weight * 3.5))
-        else:
-            skills_pts = 12  # unknown: neutral
+    Only sentences or lines that mention graduation, class year, or degree
+    completion are considered. This avoids mistaking the internship dates or a
+    copyright year for the student's graduation window.
+    """
+    if not description:
+        return "?"
 
-        # ---- eligibility (0-25)
-        flags = []
-        elig = 25
-        if season_status == "match":
-            flags.append({"kind": "good", "label": season_label})
-        else:
-            flags.append({"kind": "info", "label": season_label})
-            elig -= 3
-        if desc:
-            g = self.grad_check(desc)
-            if g:
-                ok, label = g
-                if ok:
-                    flags.append({"kind": "good", "label": f"Grad window {label} fits"})
-                else:
-                    flags.append({"kind": "warn", "label": f"Grad window {label}"})
-                    elig -= 12
-            c = self.class_check(desc)
-            if c:
-                flags.append({"kind": c[0], "label": c[1]})
-                if c[0] == "warn":
-                    elig -= 10
-            if GRAD_DEGREE_ONLY_RX.search(desc):
-                flags.append({"kind": "warn", "label": "Grad students only?"})
-                elig -= 18
-            gm = GPA_RX.search(desc)
-            if gm:
-                need = float(gm.group(1) or gm.group(2))
-                if 2.0 <= need <= 4.0:
-                    if self.gpa and self.gpa < need:
-                        flags.append({"kind": "warn", "label": f"Min GPA {need:.1f}"})
-                        elig -= 12
-                    else:
-                        flags.append({"kind": "info", "label": f"Min GPA {need:.1f}"})
-            if CITIZEN_RX.search(desc) or job.get("source") == "USAJOBS":
-                flags.append({"kind": "info", "label": "U.S. person / ITAR", "id": "citizen"})
-            if CLEARANCE_RX.search(desc):
-                flags.append({"kind": "info", "label": "Clearance", "id": "clearance"})
-        else:
-            flags.append({"kind": "info", "label": "Full description not loaded"})
-        elig = max(0, elig)
+    chunks = re.split(r"\n+|(?<=[.!?])\s+", description)
+    for raw_chunk in chunks:
+        chunk = re.sub(r"\s+", " ", raw_chunk).strip()
+        if not chunk or not _GRADUATION_TRIGGER.search(chunk):
+            continue
+        dates = list(dict.fromkeys(
+            _normalize_academic_date(match.group(0))
+            for match in _ACADEMIC_DATE.finditer(chunk)
+        ))
+        if not dates:
+            continue
+        if len(dates) >= 2:
+            return f"{dates[0]} – {dates[1]}"
 
-        # ---- qualification-by-qualification check (see quals.py)
-        quals = self.qc.check(desc) if (self.qc and desc) else None
-        req_penalty = 0
-        if quals:
-            # Skip misses the eligibility points above already took off
-            already = ("Grad date", "Asks for a grad", "Wants senior", "Needs GPA")
-            hard = [r for r in quals.get("required", [])
-                    if r["status"] == "missing" and not r["why"].startswith(already)]
-            req_penalty = min(15, 5 * len(hard))
-
-        score = int(max(0, min(100, relevance + skills_pts + elig) - req_penalty))
-        if score < self.min_score:
-            return None, "low score"
-        tier = "strong" if score >= 72 else "good" if score >= 56 else "look"
-
-        return {
-            "score": score,
-            "tier": tier,
-            "parts": {"aerospace": relevance, "skills": skills_pts, "eligibility": elig,
-                      "requirements": -req_penalty},
-            "quals": quals,
-            "matched": matched,
-            "related": related,
-            "gaps": gaps,
-            "flags": flags,
-            "season": season_status,
-            "has_description": bool(desc),
-        }, ""
+        lowered = chunk.lower()
+        value = dates[0]
+        if re.search(r"\b(?:or|and)\s+(?:later|after|beyond)\b|\bor\s+later\b", lowered):
+            return f"{value} or later"
+        if re.search(r"\b(?:or|and)\s+(?:earlier|before)\b|\bor\s+earlier\b", lowered):
+            return f"{value} or earlier"
+        return value
+    return "?"

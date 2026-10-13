@@ -7,11 +7,16 @@ Each fetcher returns a list of job dicts with these keys:
 from __future__ import annotations
 
 import datetime as dt
+import json
 import os
+import random
 import re
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import urlparse
 
-from .util import FetchError, get_json, html_to_text, parse_ats_url, post_json, strip_tracking
+from .util import FetchError, get_json, html_to_text, parse_ats_url, post_json, request, strip_tracking
 
 
 def _date_from_iso(s) -> str:
@@ -64,6 +69,41 @@ def fetch_simplify_list(src: dict) -> list[dict]:
     return jobs
 
 
+def github_list_revision(src: dict) -> str:
+    """Return the newest commit SHA for a raw GitHub list, or ``""``.
+
+    Lambda stores this value in DynamoDB. If it has not changed, the large JSON
+    listing does not need to be downloaded and parsed again. Failure to check a
+    revision is deliberately non-fatal: the caller simply fetches the list.
+    """
+    headers = {"Accept": "application/vnd.github+json"}
+    token = os.environ.get("GITHUB_TOKEN", "").strip()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    for raw_url in src.get("urls", []):
+        parsed = urlparse(raw_url)
+        if parsed.hostname != "raw.githubusercontent.com":
+            continue
+        parts = [part for part in parsed.path.split("/") if part]
+        if len(parts) < 4:
+            continue
+        owner, repo, branch = parts[:3]
+        try:
+            commit = get_json(
+                f"https://api.github.com/repos/{owner}/{repo}/commits/{branch}",
+                headers=headers,
+                timeout=20,
+                retries=1,
+            )
+            sha = str(commit.get("sha") or "").strip()
+            if sha:
+                return sha
+        except (FetchError, ValueError):
+            continue
+    return ""
+
+
 def fetch_getro(src: dict) -> list[dict]:
     """Getro-powered job boards (e.g. the Space Capital board). Each posting links
     to the company's own hiring page, so descriptions are filled in later."""
@@ -99,7 +139,9 @@ def fetch_getro(src: dict) -> list[dict]:
 # ------------------------------------------------------------ company boards
 
 def fetch_greenhouse(board: str, company: str) -> list[dict]:
-    data = get_json(f"https://boards-api.greenhouse.io/v1/boards/{board}/jobs?content=true", timeout=60)
+    # Keep the five-minute listing pass small. Full descriptions are requested
+    # later, and only for previously unseen candidates.
+    data = get_json(f"https://boards-api.greenhouse.io/v1/boards/{board}/jobs", timeout=60)
     out = []
     for j in data.get("jobs", []):
         out.append({
@@ -109,7 +151,7 @@ def fetch_greenhouse(board: str, company: str) -> list[dict]:
             "url": j.get("absolute_url", ""),
             "source": f"{company} careers",
             "posted": _date_from_iso(j.get("first_published") or j.get("updated_at")),
-            "description": html_to_text(j.get("content")),
+            "description": "",
             "season_hint": "",
         })
     return out
@@ -138,6 +180,7 @@ def fetch_lever(board: str, company: str) -> list[dict]:
             "posted": _date_from_epoch(j.get("createdAt"), ms=True),
             "description": _lever_text(j),
             "season_hint": "",
+            "employment_type": cats.get("commitment", ""),
         })
     return out
 
@@ -166,8 +209,68 @@ def fetch_ashby(board: str, company: str) -> list[dict]:
             "posted": _date_from_iso(j.get("publishedAt")),
             "description": j.get("descriptionPlain") or html_to_text(j.get("descriptionHtml")),
             "season_hint": "",
+            "employment_type": j.get("employmentType", ""),
         })
     return out
+
+
+def fetch_smartrecruiters(board: str, company: str) -> list[dict]:
+    """Fetch the public SmartRecruiters listing API without job descriptions."""
+    out, offset, limit = [], 0, 100
+    while True:
+        data = get_json(
+            f"https://api.smartrecruiters.com/v1/companies/{board}/postings"
+            f"?limit={limit}&offset={offset}",
+            timeout=60,
+        )
+        batch = data.get("content") or []
+        for j in batch:
+            location = j.get("location") or {}
+            identifier = str((j.get("company") or {}).get("identifier") or board)
+            title_slug = re.sub(r"[^a-z0-9]+", "-", (j.get("name") or "").lower()).strip("-")
+            out.append({
+                "company": company,
+                "title": (j.get("name") or "").strip(),
+                "location": location.get("fullLocation") or ", ".join(filter(None, [
+                    location.get("city"), location.get("region"), location.get("country"),
+                ])),
+                "url": f"https://jobs.smartrecruiters.com/{identifier}/{j.get('id')}-{title_slug}",
+                "source": f"{company} careers",
+                "posted": _date_from_iso(j.get("releasedDate")),
+                "description": "",
+                "season_hint": "",
+                "employment_type": (j.get("typeOfEmployment") or {}).get("label", ""),
+            })
+        offset += len(batch)
+        if not batch or offset >= int(data.get("totalFound") or 0):
+            return out
+
+
+def fetch_rippling(board: str, company: str) -> list[dict]:
+    """Fetch a Rippling ATS board and merge duplicate per-location rows."""
+    data = get_json(f"https://api.rippling.com/platform/api/ats/v1/board/{board}/jobs", timeout=60)
+    found: dict[str, dict] = {}
+    for j in data if isinstance(data, list) else []:
+        job_id = str(j.get("uuid") or "")
+        if not job_id:
+            continue
+        location = str((j.get("workLocation") or {}).get("label") or "").strip()
+        if job_id in found:
+            old_locations = [part.strip() for part in found[job_id]["location"].split(";") if part.strip()]
+            if location and location not in old_locations:
+                found[job_id]["location"] = "; ".join(old_locations + [location])
+            continue
+        found[job_id] = {
+            "company": company,
+            "title": (j.get("name") or "").strip(),
+            "location": location,
+            "url": j.get("url") or f"https://ats.rippling.com/{board}/jobs/{job_id}",
+            "source": f"{company} careers",
+            "posted": "",
+            "description": "",
+            "season_hint": "",
+        }
+    return list(found.values())
 
 
 _INTERNISH = re.compile(r"(?i)(?<![a-z])(intern|internship|co-?op|co op|student)(?![a-z])")
@@ -324,37 +427,79 @@ def fetch_usajobs(cfg: dict) -> list[dict]:
 
 # ------------------------------------------------------------ run them all
 
-def fetch_all(cfg: dict) -> tuple[list[dict], list[dict]]:
-    """Returns (jobs, source_status). One broken source never stops the rest."""
-    tasks = []  # (label, kind, callable)
+def fetch_all(
+    cfg: dict,
+    tiers: set[int] | None = None,
+    only: set[str] | None = None,
+) -> tuple[list[dict], list[dict]]:
+    """Return ``(jobs, source_status)`` without letting one source stop a run.
+
+    ``tier`` defaults to 1. The Lambda runner uses tier 1 every five minutes,
+    tier 2 every fifteen minutes, and tier 3 hourly. ``only`` is used by the
+    read-only verification command to probe named sources.
+    """
+    selected_names = {name.casefold() for name in (only or set())}
+    tasks = []  # (label, kind, tier, host-group, callable)
+
+    def add(entry: dict, kind: str, host: str, fn) -> None:
+        label = str(entry["name"])
+        tier = max(1, min(3, int(entry.get("tier", 1))))
+        if tiers is not None and tier not in tiers:
+            return
+        if selected_names and label.casefold() not in selected_names:
+            return
+        tasks.append((label, kind, tier, host, fn))
+
     for src in cfg.get("list", []):
-        tasks.append((src["name"], "Internship list", lambda s=src: fetch_simplify_list(s)))
+        add(src, "Internship list", "raw.githubusercontent.com", lambda s=src: fetch_simplify_list(s))
     for src in cfg.get("getro", []):
-        tasks.append((src["name"], "Job board", lambda s=src: fetch_getro(s)))
+        add(src, "Job board", "api.getro.com", lambda s=src: fetch_getro(s))
     for c in cfg.get("greenhouse", []):
-        tasks.append((c["name"], "Greenhouse", lambda c=c: fetch_greenhouse(c["board"], c["name"])))
+        add(c, "Greenhouse", "boards-api.greenhouse.io", lambda c=c: fetch_greenhouse(c["board"], c["name"]))
     for c in cfg.get("lever", []):
-        tasks.append((c["name"], "Lever", lambda c=c: fetch_lever(c["board"], c["name"])))
+        add(c, "Lever", "api.lever.co", lambda c=c: fetch_lever(c["board"], c["name"]))
     for c in cfg.get("ashby", []):
-        tasks.append((c["name"], "Ashby", lambda c=c: fetch_ashby(c["board"], c["name"])))
+        add(c, "Ashby", "api.ashbyhq.com", lambda c=c: fetch_ashby(c["board"], c["name"]))
+    for c in cfg.get("smartrecruiters", []):
+        add(c, "SmartRecruiters", "api.smartrecruiters.com",
+            lambda c=c: fetch_smartrecruiters(c["board"], c["name"]))
+    for c in cfg.get("rippling", []):
+        add(c, "Rippling", "api.rippling.com", lambda c=c: fetch_rippling(c["board"], c["name"]))
     for c in cfg.get("workday", []):
-        tasks.append((c["name"], "Workday", lambda c=c: fetch_workday(c["host"], c["site"], c["name"])))
+        add(c, "Workday", c["host"], lambda c=c: fetch_workday(c["host"], c["site"], c["name"]))
     for c in cfg.get("eightfold", []):
-        tasks.append((c["name"], "Eightfold", lambda c=c: fetch_eightfold(c["host"], c["domain"], c["name"])))
+        add(c, "Eightfold", c["host"], lambda c=c: fetch_eightfold(c["host"], c["domain"], c["name"]))
     for c in cfg.get("clearcompany", []):
-        tasks.append((c["name"], "ClearCompany", lambda c=c: fetch_clearcompany(c["site_id"], c["name"])))
+        add(c, "ClearCompany", "careers-api.clearcompany.com",
+            lambda c=c: fetch_clearcompany(c["site_id"], c["name"]))
     if "usajobs" in cfg:
-        tasks.append(("USAJOBS", "Federal", lambda: fetch_usajobs(cfg["usajobs"])))
+        federal = {"name": "USAJOBS", **cfg["usajobs"]}
+        add(federal, "Federal", "data.usajobs.gov", lambda: fetch_usajobs(cfg["usajobs"]))
+
+    # Do not stampede a shared ATS with every company board simultaneously.
+    # The short jitter also keeps scheduled invocations from always arriving on
+    # the exact same millisecond as other public clients.
+    host_limits: dict[str, threading.BoundedSemaphore] = {}
+    for _, _, _, host, _ in tasks:
+        host_limits.setdefault(host, threading.BoundedSemaphore(2))
 
     def run(task):
-        label, kind, fn = task
+        label, kind, tier, host, fn = task
         try:
-            jobs = fn()
+            with host_limits[host]:
+                time.sleep(random.uniform(0.02, 0.18))
+                jobs = fn()
             for j in jobs:
                 j["source_id"] = label
-            return jobs, {"name": label, "kind": kind, "ok": True, "count": len(jobs), "error": ""}
+            return jobs, {
+                "name": label, "kind": kind, "tier": tier,
+                "ok": True, "count": len(jobs), "error": "",
+            }
         except Exception as e:  # noqa: BLE001 - report anything, keep going
-            return [], {"name": label, "kind": kind, "ok": False, "count": 0, "error": str(e)[:160]}
+            return [], {
+                "name": label, "kind": kind, "tier": tier,
+                "ok": False, "count": 0, "error": str(e)[:160],
+            }
 
     jobs, status = [], []
     with ThreadPoolExecutor(max_workers=8) as pool:
@@ -387,4 +532,29 @@ def fetch_description(url: str) -> str:
     if info["ats"] == "workday":
         d = _workday_detail(info["host"], info["tenant"], info["site"], info["path"])
         return html_to_text(d.get("jobDescription"))
+    if info["ats"] == "smartrecruiters":
+        j = get_json(
+            f"https://api.smartrecruiters.com/v1/companies/{info['board']}/postings/{info['id']}",
+            timeout=30,
+        )
+        sections = ((j.get("jobAd") or {}).get("sections") or {}).values()
+        return "\n".join(
+            filter(None, (html_to_text(section.get("text")) for section in sections if isinstance(section, dict)))
+        )
+    if info["ats"] == "rippling":
+        page = request(url, timeout=30)
+        match = re.search(
+            r'<script[^>]+id=["\']__NEXT_DATA__["\'][^>]*>(.*?)</script>',
+            page,
+            re.DOTALL,
+        )
+        if not match:
+            return ""
+        data = json.loads(match.group(1))
+        description = (
+            (((data.get("props") or {}).get("pageProps") or {}).get("apiData") or {})
+            .get("jobPost", {}).get("description", {})
+        )
+        if isinstance(description, dict):
+            return "\n".join(html_to_text(str(value)) for value in description.values() if value)
     return ""
