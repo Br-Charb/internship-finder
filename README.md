@@ -147,9 +147,10 @@ Without a baseline, the first normal run treats every current posting as new. To
 }
 ```
 
-3. Run the test once. It records all currently categorized postings in DynamoDB without calling Discord.
+3. Run the test once. It records all current eligible postings in DynamoDB without calling Discord.
 4. Confirm the returned summary has a nonzero `seeded` value. A source can appear in `failed_sources` without aborting the scan; for example, USAJOBS is skipped until its two credentials exist.
-5. Change the test event to `{}` and run it again. Normally it delivers zero because the current jobs are now seeded. Check **Monitor → View CloudWatch logs** for the full summary.
+5. Create a separate `test-webhooks` event containing `{"test_webhooks": true}`. Run it once and confirm that each of the five channels receives exactly one clearly labeled test embed.
+6. Change the test event to `{}` and run it again. Normally it delivers zero because the current jobs are now seeded. Check **Monitor → View CloudWatch logs** for the full summary.
 
 If you want all currently open jobs posted to Discord, skip the seed event. The notification cap sends the backlog over multiple invocations.
 
@@ -166,7 +167,7 @@ If you want all currently open jobs posted to Discord, skip the seed event. The 
 
 EventBridge Scheduler invokes Lambda asynchronously. Confirm operation after five minutes in the Lambda CloudWatch log stream and in the DynamoDB table.
 
-At a five-minute interval there are about 8,640 scheduled invocations in a 30-day month, well below the current EventBridge Scheduler and Lambda request free allowances. Lambda's compute allowance is duration-based: at 256 MB, 400,000 GB-seconds covers about 185 seconds per invocation at this frequency. Monitor **Billing → Free Tier** and the Lambda `Duration` metric because unusually slow ATS endpoints, other workloads in the account, logging, or data transfer can still create charges.
+At a five-minute interval there are about 8,640 scheduled invocations in a 30-day month, well below the current EventBridge Scheduler and Lambda request free allowances. Lambda's compute allowance is duration-based: at 1,024 MB, 400,000 GB-seconds covers an average of about 46 seconds per invocation at this frequency. Monitor **Billing → Free Tier** and the Lambda `Duration` metric because unusually slow ATS endpoints, other workloads in the account, logging, or data transfer can still create charges.
 
 ## Updating sources or code
 
@@ -192,9 +193,9 @@ Do not commit webhook URLs or AWS credentials to this repository. Put webhook UR
 1. Run `python -m unittest discover -s tests -v` to validate filtering, routing, adapters, tier scheduling, and delivery state behavior without network calls.
 2. Run `python verify.py --only "Company Name"` to validate an actual configured endpoint without AWS or Discord.
 3. Invoke Lambda once with `{"seed_only": true}` and confirm the summary, CloudWatch source lines, and `seeded` records in DynamoDB.
-4. Invoke Lambda with `{}`. Immediately after seeding it should normally deliver zero jobs.
-5. Confirm the EventBridge schedule shows a successful invocation and a new Lambda log entry after five minutes.
-6. For an end-to-end Discord test, temporarily use five webhooks from private test channels and run a controlled non-seeded test table. Confirm one real posting reaches the expected category, then delete that temporary table or webhooks.
+4. Invoke Lambda with `{"test_webhooks": true}` and confirm one test embed reaches each Discord channel.
+5. Invoke Lambda with `{}`. Immediately after seeding it should normally deliver zero jobs.
+6. Confirm the EventBridge schedule shows a successful invocation and a new Lambda log entry after five minutes.
 
 There is no HTML renderer, `docs/` output, GitHub Pages deployment, or website publishing step in this version. Discord is the only presentation destination.
 
@@ -203,5 +204,5 @@ There is no HTML renderer, `docs/` output, GitHub Pages deployment, or website p
 - Discord delivery is effectively at-least-once. Conditional DynamoDB claims prevent routine duplicates, including overlapping Lambda runs. Like any webhook system, a crash in the tiny interval after Discord accepts a message but before DynamoDB records completion can produce one duplicate after the 15-minute claim expires.
 - A job that matches more than one category goes only to the highest-scoring primary category.
 - Discord embeds use a clickable position title and show Company, Graduation, Location, Category, Posted date, requirements, and an apply link. Graduation displays `?` when the posting does not explicitly provide a graduation date or range.
-- Unmatched jobs are not stored, so changes to category keywords can classify them in a future deployment.
+- Unmatched jobs are stored with an `ignored` state so they do not consume description lookups and DynamoDB reads on every five-minute poll.
 - Webhook URLs are never logged. Delete and recreate a Discord webhook immediately if its URL is exposed.

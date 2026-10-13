@@ -28,6 +28,7 @@ class FakeState:
         self.claimed = []
         self.completed = []
         self.released = []
+        self.ignored = []
         self.saved_revisions = []
         FakeState.instance = self
 
@@ -41,7 +42,11 @@ class FakeState:
         self.saved_revisions.append((source_name, revision))
 
     def seed(self, job, category):
-        self.seeded.append((job["key"], category.key))
+        self.seeded.append((job["key"], category.key if category else "uncategorized"))
+        return True
+
+    def ignore(self, job):
+        self.ignored.append(job["key"])
         return True
 
     def claim(self, job, category):
@@ -71,10 +76,29 @@ class ExecutionTests(unittest.TestCase):
     @patch.object(run, "github_list_revision", return_value="")
     @patch.object(run, "fetch_all", return_value=(JOBS, []))
     def test_seed_records_without_webhook(self, _fetch, _revision):
-        with self.env(), patch.object(run, "_webhook_urls", side_effect=AssertionError("webhooks not needed")):
+        with self.env(), patch.object(run, "_webhook_urls", side_effect=AssertionError("webhooks not needed")), \
+                patch.object(run, "_fill_descriptions", side_effect=AssertionError("seed should not fetch descriptions")):
             summary = run.execute(seed_only=True)
         self.assertEqual(1, summary["seeded"])
         self.assertEqual("software", FakeState.instance.seeded[0][1])
+
+    @patch.object(run, "DynamoSeenJobs", FakeState)
+    @patch.object(run, "github_list_revision", return_value="")
+    @patch.object(run, "fetch_all", return_value=([{
+        "company": "Example Co",
+        "title": "General Intern",
+        "location": "Remote",
+        "url": "https://jobs.example.test/general-intern-seed",
+        "source": "Example careers",
+        "posted": "2026-10-13",
+        "description": "Assist with general projects.",
+    }], []))
+    def test_seed_records_uncategorized_baseline(self, _fetch, _revision):
+        with self.env():
+            summary = run.execute(seed_only=True)
+        self.assertEqual(1, summary["seeded"])
+        self.assertEqual(1, summary["ignored"])
+        self.assertEqual("uncategorized", FakeState.instance.seeded[0][1])
 
     @patch.object(run, "DynamoSeenJobs", FakeState)
     @patch.object(run, "github_list_revision", return_value="")
@@ -88,6 +112,34 @@ class ExecutionTests(unittest.TestCase):
         self.assertEqual("software", FakeState.instance.claimed[0][1])
         self.assertEqual("delivered", FakeState.instance.completed[0][2])
         post.assert_called_once()
+
+    @patch.object(run, "DynamoSeenJobs", FakeState)
+    @patch.object(run, "github_list_revision", return_value="")
+    @patch.object(run, "fetch_all", return_value=([{
+        "company": "Example Co",
+        "title": "General Intern",
+        "location": "Remote",
+        "url": "https://jobs.example.test/general-intern-456",
+        "source": "Example careers",
+        "posted": "2026-10-13",
+        "description": "Assist with general projects.",
+    }], []))
+    def test_uncategorized_job_is_remembered(self, _fetch, _revision):
+        urls = {category.key: f"https://discord.com/api/webhooks/{category.key}/secret" for category in run.CATEGORIES}
+        with self.env(), patch.object(run, "_webhook_urls", return_value=urls), \
+                patch.object(run, "post_to_discord") as post:
+            summary = run.execute()
+        self.assertEqual(1, summary["ignored"])
+        self.assertEqual(1, len(FakeState.instance.ignored))
+        post.assert_not_called()
+
+    def test_webhook_test_posts_once_per_category(self):
+        urls = {category.key: f"https://discord.com/api/webhooks/{category.key}/secret" for category in run.CATEGORIES}
+        with patch.object(run, "_webhook_urls", return_value=urls), \
+                patch.object(run, "post_to_discord") as post:
+            summary = run.lambda_handler({"test_webhooks": True}, None)
+        self.assertEqual(5, summary["count"])
+        self.assertEqual(5, post.call_count)
 
     def test_polling_tiers(self):
         # Epoch minute 0 is divisible by both 15 and 60 minutes.

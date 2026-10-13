@@ -89,7 +89,9 @@ class DynamoSeenJobs:
                 for item in response.get("Responses", {}).get(self.table_name, []):
                     state = item.get("state")
                     lease = int(item.get("lease_expires") or 0)
-                    if state in {"delivered", "seeded"} or (state == "pending" and lease >= now_epoch):
+                    if state in {"delivered", "seeded", "ignored"} or (
+                        state == "pending" and lease >= now_epoch
+                    ):
                         known.add(item["job_id"])
                 request = response.get("UnprocessedKeys") or {}
                 if request:
@@ -172,7 +174,7 @@ class DynamoSeenJobs:
             raise
         return token
 
-    def seed(self, job: dict[str, Any], category: Category) -> bool:
+    def seed(self, job: dict[str, Any], category: Category | None) -> bool:
         """Record a baseline job with one conditional write and no notification."""
         now = _iso_now()
         try:
@@ -185,7 +187,30 @@ class DynamoSeenJobs:
                     "updated_at": now,
                     "job_title": str(job.get("title") or "")[:500],
                     "company": str(job.get("company") or "")[:300],
-                    "category": category.key,
+                    "category": category.key if category else "uncategorized",
+                    "job_url": str(job.get("url") or "")[:1500],
+                },
+                ConditionExpression="attribute_not_exists(job_id)",
+            )
+        except Exception as error:
+            if _conditional_failure(error):
+                return False
+            raise
+        return True
+
+    def ignore(self, job: dict[str, Any]) -> bool:
+        """Remember an uncategorized job so every poll does not process it again."""
+        now = _iso_now()
+        try:
+            self.table.put_item(
+                Item={
+                    "job_id": job["key"],
+                    "state": "ignored",
+                    "first_seen": now,
+                    "updated_at": now,
+                    "job_title": str(job.get("title") or "")[:500],
+                    "company": str(job.get("company") or "")[:300],
+                    "category": "uncategorized",
                     "job_url": str(job.get("url") or "")[:1500],
                 },
                 ConditionExpression="attribute_not_exists(job_id)",
@@ -322,6 +347,32 @@ def post_to_discord(webhook_url: str, payload: dict[str, Any], attempts: int = 4
     raise RuntimeError("Discord webhook retries exhausted")
 
 
+def test_webhooks() -> dict[str, Any]:
+    """Send one clearly labeled test embed to every configured Discord channel."""
+    urls = _webhook_urls()
+    sent: list[str] = []
+    failures: list[str] = []
+    for category in CATEGORIES:
+        job = {
+            "company": "Internship Finder",
+            "title": f"Webhook test — {category.label}",
+            "location": "AWS Lambda (us-east-1)",
+            "url": "https://github.com/Br-Charb/internship-finder",
+            "source": "Manual Lambda connection test",
+            "posted": _utc_now().date().isoformat(),
+            "description": "Requirements:\n- No action needed; this is only a webhook connection test.",
+        }
+        try:
+            post_to_discord(urls[category.key], discord_payload(job, category, ["connection test"]))
+            sent.append(category.key)
+        except Exception as error:
+            failures.append(f"{category.key}: {error}")
+
+    if failures:
+        raise RuntimeError("Webhook test failures: " + "; ".join(failures))
+    return {"webhook_tests_sent": sent, "count": len(sent)}
+
+
 def _deduplicate(raw_jobs: list[dict[str, Any]], scope: str) -> dict[str, dict[str, Any]]:
     jobs: dict[str, dict[str, Any]] = {}
     for job in raw_jobs:
@@ -415,41 +466,55 @@ def execute(seed_only: bool = False) -> dict[str, Any]:
     known = state.known_ids(list(jobs_by_id))
     new_jobs = [job for key, job in jobs_by_id.items() if key not in known]
     new_jobs.sort(key=lambda job: (str(job.get("posted") or ""), str(job.get("company") or "")), reverse=True)
-    loaded = _fill_descriptions(new_jobs, description_limit)
+    # A baseline never sends notifications, so fetching thousands of full job
+    # pages would add time and network cost without changing user-visible output.
+    loaded = 0 if seed_only else _fill_descriptions(new_jobs, description_limit)
 
     routed: list[tuple[dict[str, Any], Category, list[str]]] = []
+    unmatched: list[dict[str, Any]] = []
     for job in new_jobs:
         category, terms = categorize_job(str(job.get("title") or ""), str(job.get("description") or ""))
         if category:
             routed.append((job, category, terms))
+        else:
+            unmatched.append(job)
 
-    delivered = seeded = skipped_claim = failures = 0
-    run_limit = len(routed) if seed_only else delivery_limit
-    for job, category, terms in routed[:run_limit]:
-        if seed_only:
+    delivered = seeded = ignored = skipped_claim = failures = 0
+    if seed_only:
+        categories = {job["key"]: category for job, category, _terms in routed}
+        for job in new_jobs:
+            category = categories.get(job["key"])
             if state.seed(job, category):
                 seeded += 1
+                if category is None:
+                    ignored += 1
             else:
                 skipped_claim += 1
-            continue
+    else:
+        for job in unmatched:
+            if state.ignore(job):
+                ignored += 1
+            else:
+                skipped_claim += 1
 
-        token = state.claim(job, category)
-        if token is None:
-            skipped_claim += 1
-            continue
+        for job, category, terms in routed[:delivery_limit]:
+            token = state.claim(job, category)
+            if token is None:
+                skipped_claim += 1
+                continue
 
-        try:
-            post_to_discord(webhooks[category.key], discord_payload(job, category, terms))
-        except Exception as error:  # continue other categories and retry this job next invocation
-            failures += 1
-            print(f"ERROR delivery {job['key']} ({category.key}): {error}", file=sys.stderr)
-            state.release(job["key"], token)
-            continue
+            try:
+                post_to_discord(webhooks[category.key], discord_payload(job, category, terms))
+            except Exception as error:  # continue other categories and retry this job next invocation
+                failures += 1
+                print(f"ERROR delivery {job['key']} ({category.key}): {error}", file=sys.stderr)
+                state.release(job["key"], token)
+                continue
 
-        # Do not release the claim if this write fails: Discord already accepted
-        # the post, and keeping the lease is safer than immediately duplicating it.
-        state.complete(job["key"], token)
-        delivered += 1
+            # Do not release the claim if this write fails: Discord already accepted
+            # the post, and keeping the lease is safer than immediately duplicating it.
+            state.complete(job["key"], token)
+            delivered += 1
 
     failed_sources = [status["name"] for status in source_status if not status["ok"]]
     deferred = 0 if seed_only else max(0, len(routed) - delivery_limit)
@@ -463,6 +528,7 @@ def execute(seed_only: bool = False) -> dict[str, Any]:
         "categorized": len(routed),
         "delivered": delivered,
         "seeded": seeded,
+        "ignored": ignored,
         "claim_conflicts": skipped_claim,
         "delivery_failures": failures,
         "deferred_by_limit": deferred,
@@ -485,8 +551,13 @@ def execute(seed_only: bool = False) -> dict[str, Any]:
 
 
 def lambda_handler(event: dict[str, Any] | None, context: Any) -> dict[str, Any]:
-    """AWS Lambda handler. Pass ``{"seed_only": true}`` for the first baseline run."""
-    seed_only = bool((event or {}).get("seed_only", False))
+    """AWS Lambda handler with baseline and webhook-test modes."""
+    event = event or {}
+    if event.get("test_webhooks"):
+        if event.get("seed_only"):
+            raise ValueError("test_webhooks and seed_only cannot both be true")
+        return test_webhooks()
+    seed_only = bool(event.get("seed_only", False))
     return execute(seed_only=seed_only)
 
 
