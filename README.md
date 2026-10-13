@@ -9,35 +9,35 @@ my resume, and publishes the results to a page I can open on my phone.
 ## Today's top matches
 
 <!-- JOBS:START -->
-**468 matches** as of Oct 11, 2026. Full list with filters: **[open the job page](https://jonasagront.github.io/aero-job-finder/)**
+**467 matches** as of Oct 13, 2026. Full list with filters: **[open the job page](https://jonasagront.github.io/aero-job-finder/)**
 
 | Fit | Company | Role | Location | Apply |
 |---|---|---|---|---|
-| 100 | Anduril | 2027 Flight Software Engineer Intern 🆕 | Costa Mesa, California, United States | [Apply](https://boards.greenhouse.io/andurilindustries/jobs/5239083007?gh_jid=5239083007) |
-| 100 | Hermeus | Structures/Mechanical Engineering Intern - Spring/Summer 2027 🆕 | Atlanta, GA | [Apply](https://jobs.lever.co/hermeus/60b5d40a-1065-4bd2-8c72-6b2fb69d4761) |
-| 100 | Varda Space | Guidance, Navigation & Controls (GNC) Internship - Summer 2027 🆕 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/7865601003) |
-| 100 | Varda Space | Mechanisms & Payload Internship - Summer 2027 🆕 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010168003) |
-| 100 | Varda Space | Propulsion Engineering Internship - Summer 2027 🆕 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010169003) |
-| 100 | Varda Space | Structures Engineering Internship - Summer 2027 🆕 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010167003) |
-| 98 | AeroVironment | Summer 2027 Mechanical Engineering Intern 🆕 | 16 Locations | [Apply](https://avav.wd1.myworkdayjobs.com/AVAV/job/Simi-Valley-CA/Summer-2027-Mechanical-Engineering-Intern_8558) |
-| 98 | Varda Space | Aerodynamics & Analysis Engineering Internship - Summer 2027 🆕 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010632003) |
-| 98 | Varda Space | Thermal Engineering Internship - Summer 2027 🆕 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010172003) |
-| 98 | Varda Space | Vehicle Integration & Test Internship - Summer 2027 🆕 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010170003) |
-| 97 | GE Aerospace | Thermal Systems Design Engineering Intern (6 Months) 🆕 | Istanbul | [Apply](https://geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite/job/Istanbul/Thermal-Systems-Design-Engineering-Intern--6-Months-_R5039990-1) |
-| 96 | K2 Space | Mechanical  Engineering Intern – Summer 2027 🆕 | Los Angeles, CA | [Apply](https://job-boards.greenhouse.io/k2spacecorporation/jobs/5411915008) |
-| 96 | Rocket Lab | Propulsion Analyst Intern Summer 2027 🆕 | Long Beach, CA | [Apply](https://job-boards.greenhouse.io/rocketlab/jobs/7986820003) |
-| 96 | Saronic | Mechanical Engineer Intern (Summer 2027) 🆕 | Austin, TX | [Apply](https://jobs.ashbyhq.com/saronic/f52ae6eb-7eba-4c64-97c7-57e2a234e088) |
-| 95 | K2 Space | GNC Engineering Intern – Summer 2027 🆕 | Los Angeles, CA | [Apply](https://job-boards.greenhouse.io/k2spacecorporation/jobs/5411917008) |
-| 95 | Muon Space | Flight Software Engineering Intern (Summer 2027) 🆕 | San Jose, CA | [Apply](https://job-boards.greenhouse.io/muonspace/jobs/5247725007) |
-| 95 | Zipline | Flight Test Engineer Intern (Summer 2027) 🆕 | South San Francisco, California, USA | [Apply](https://www.zipline.com/open-roles/7999924003?gh_jid=7999924003) |
-| 94 | Anduril | Winter 2027 Manufacturing Engineer Co-op 🆕 | Ashville, Ohio, United States; Lexington | [Apply](https://boards.greenhouse.io/andurilindustries/jobs/5236589007?gh_jid=5236589007) |
-| 94 | K2 Space | Avionics Systems/Test Engineering Intern – Summer 2027 🆕 | Los Angeles, CA | [Apply](https://job-boards.greenhouse.io/k2spacecorporation/jobs/5411921008) |
-| 94 | The Aerospace Corporation | 2027 Space Vehicle and Ground Systems Undergraduate Intern 🆕 | 2 Locations | [Apply](https://aero.wd5.myworkdayjobs.com/External/job/El-Segundo-CA/XMLNAME-2027-Space-Vehicle-and-Ground-Systems-Undergraduate-Intern_R016691) |
-| 94 | Vast Space | Emerging Talent - Mechanical/Aerospace Engineering Internship 🆕 | Long Beach, California, United States | [Apply](https://boards.greenhouse.io/vast/jobs/4711400006?gh_jid=4711400006) |
-| 93 | AeroVironment | Mechanical Engineering Intern 🆕 | Pottstown, PA | [Apply](https://avav.wd1.myworkdayjobs.com/AVAV/job/Pottstown-PA/Mechanical-Engineering-Intern_8627) |
-| 93 | AeroVironment | Mechanical Engineering Intern 🆕 | Petaluma, CA | [Apply](https://avav.wd1.myworkdayjobs.com/AVAV/job/Petaluma-CA/Mechanical-Engineering-Intern_9038) |
-| 93 | Boeing | Aerodynamics Engineering Intern- Summer 2027 🆕 | GBR - Farnborough, UK | [Apply](https://boeing.wd1.myworkdayjobs.com/EXTERNAL_CAREERS/job/GBR---Farnborough-UK/Aerodynamics-Engineering-Intern--Summer-2027_JR2026519329) |
-| 93 | Rocket Lab | Mechanical Engineering Intern Summer 2027 🆕 | Toronto, CAN | [Apply](https://job-boards.greenhouse.io/rocketlab/jobs/7991769003) |
+| 100 | Anduril | 2027 Flight Software Engineer Intern | Costa Mesa, California, United States | [Apply](https://boards.greenhouse.io/andurilindustries/jobs/5239083007?gh_jid=5239083007) |
+| 100 | Hermeus | Structures/Mechanical Engineering Intern - Spring/Summer 2027 | Atlanta, GA | [Apply](https://jobs.lever.co/hermeus/60b5d40a-1065-4bd2-8c72-6b2fb69d4761) |
+| 100 | Varda Space | Guidance, Navigation & Controls (GNC) Internship - Summer 2027 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/7865601003) |
+| 100 | Varda Space | Mechanisms & Payload Internship - Summer 2027 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010168003) |
+| 100 | Varda Space | Propulsion Engineering Internship - Summer 2027 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010169003) |
+| 100 | Varda Space | Structures Engineering Internship - Summer 2027 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010167003) |
+| 98 | AeroVironment | Summer 2027 Mechanical Engineering Intern | 16 Locations | [Apply](https://avav.wd1.myworkdayjobs.com/AVAV/job/Simi-Valley-CA/Summer-2027-Mechanical-Engineering-Intern_8558) |
+| 98 | Varda Space | Aerodynamics & Analysis Engineering Internship - Summer 2027 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010632003) |
+| 98 | Varda Space | Thermal Engineering Internship - Summer 2027 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010172003) |
+| 98 | Varda Space | Vehicle Integration & Test Internship - Summer 2027 | El Segundo, California, United States | [Apply](https://job-boards.greenhouse.io/vardaspace/jobs/8010170003) |
+| 97 | GE Aerospace | Thermal Systems Design Engineering Intern (6 Months) 🆕 | Istanbul | [Apply](https://geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite/job/Istanbul/Thermal-Systems-Design-Engineering-Intern--6-Months-_R5039995-1) |
+| 97 | GE Aerospace | Thermal Systems Design Engineering Intern (6 Months) | Istanbul | [Apply](https://geaerospace.wd5.myworkdayjobs.com/GE_ExternalSite/job/Istanbul/Thermal-Systems-Design-Engineering-Intern--6-Months-_R5039990-1) |
+| 96 | K2 Space | Mechanical  Engineering Intern – Summer 2027 | Los Angeles, CA | [Apply](https://job-boards.greenhouse.io/k2spacecorporation/jobs/5411915008) |
+| 96 | Rocket Lab | Propulsion Analyst Intern Summer 2027 | Long Beach, CA | [Apply](https://job-boards.greenhouse.io/rocketlab/jobs/7986820003) |
+| 96 | Saronic | Mechanical Engineer Intern (Summer 2027) | Austin, TX | [Apply](https://jobs.ashbyhq.com/saronic/f52ae6eb-7eba-4c64-97c7-57e2a234e088) |
+| 95 | K2 Space | GNC Engineering Intern – Summer 2027 | Los Angeles, CA | [Apply](https://job-boards.greenhouse.io/k2spacecorporation/jobs/5411917008) |
+| 95 | Muon Space | Flight Software Engineering Intern (Summer 2027) | San Jose, CA | [Apply](https://job-boards.greenhouse.io/muonspace/jobs/5247725007) |
+| 95 | Zipline | Flight Test Engineer Intern (Summer 2027) | South San Francisco, California, USA | [Apply](https://www.zipline.com/open-roles/7999924003?gh_jid=7999924003) |
+| 94 | Anduril | Winter 2027 Manufacturing Engineer Co-op | Ashville, Ohio, United States; Lexington | [Apply](https://boards.greenhouse.io/andurilindustries/jobs/5236589007?gh_jid=5236589007) |
+| 94 | K2 Space | Avionics Systems/Test Engineering Intern – Summer 2027 | Los Angeles, CA | [Apply](https://job-boards.greenhouse.io/k2spacecorporation/jobs/5411921008) |
+| 94 | The Aerospace Corporation | 2027 Space Vehicle and Ground Systems Undergraduate Intern | 2 Locations | [Apply](https://aero.wd5.myworkdayjobs.com/External/job/El-Segundo-CA/XMLNAME-2027-Space-Vehicle-and-Ground-Systems-Undergraduate-Intern_R016691) |
+| 94 | Vast Space | Emerging Talent - Mechanical/Aerospace Engineering Internship | Long Beach, California, United States | [Apply](https://boards.greenhouse.io/vast/jobs/4711400006?gh_jid=4711400006) |
+| 93 | AeroVironment | Mechanical Engineering Intern | Pottstown, PA | [Apply](https://avav.wd1.myworkdayjobs.com/AVAV/job/Pottstown-PA/Mechanical-Engineering-Intern_8627) |
+| 93 | AeroVironment | Mechanical Engineering Intern | Petaluma, CA | [Apply](https://avav.wd1.myworkdayjobs.com/AVAV/job/Petaluma-CA/Mechanical-Engineering-Intern_9038) |
+| 93 | Boeing | Aerodynamics Engineering Intern- Summer 2027 | GBR - Farnborough, UK | [Apply](https://boeing.wd1.myworkdayjobs.com/EXTERNAL_CAREERS/job/GBR---Farnborough-UK/Aerodynamics-Engineering-Intern--Summer-2027_JR2026519329) |
 <!-- JOBS:END -->
 
 ---
