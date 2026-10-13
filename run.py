@@ -14,6 +14,7 @@ from pathlib import Path
 
 from jobfinder.ai import review_jobs
 from jobfinder.match import Matcher
+from jobfinder.quals import QualChecker
 from jobfinder.render import build_page, update_readme
 from jobfinder.sources import fetch_all, fetch_description
 from jobfinder.util import FetchError, job_key
@@ -25,7 +26,7 @@ DESC_FILE = DATA / "descriptions.json"
 AI_FILE = DATA / "ai_reviews.json"
 PAGE_URL = "https://jonasagront.github.io/aero-job-finder/"
 
-MAX_NEW_LOOKUPS = 250   # full-description lookups per run for list-only postings
+MAX_NEW_LOOKUPS = 500   # full-description lookups per run for list-only postings
 KEEP_MISSING_DAYS = 5   # keep a job this long if its source failed to load
 
 
@@ -47,6 +48,7 @@ def main() -> int:
     profile = tomllib.loads((ROOT / "profile.toml").read_text(encoding="utf-8"))
     sources_cfg = tomllib.loads((ROOT / "sources.toml").read_text(encoding="utf-8"))
     matcher = Matcher(profile, sources_cfg)
+    matcher.qc = QualChecker(matcher, profile)
 
     print("1) Reading job sources")
     raw, status = fetch_all(sources_cfg)
@@ -142,7 +144,8 @@ def main() -> int:
     save_json(AI_FILE, {k: v for k, v in ai_cache.items() if k in keep})
     (ROOT / "docs").mkdir(exist_ok=True)
     (ROOT / "docs" / "index.html").write_text(build_page(final, status, profile, now), encoding="utf-8")
-    update_readme(ROOT / "README.md", final, PAGE_URL, now)
+    update_readme(ROOT / "README.md", final, PAGE_URL, now,
+                  fresh_days=int(profile["search"].get("fresh_days", 30)))
     new_today = sum(1 for j in final if j["first_seen"] == today)
     print(f"Done: {len(final)} matches on the page, {new_today} new today.")
     return 0

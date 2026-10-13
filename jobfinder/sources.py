@@ -64,6 +64,38 @@ def fetch_simplify_list(src: dict) -> list[dict]:
     return jobs
 
 
+def fetch_getro(src: dict) -> list[dict]:
+    """Getro-powered job boards (e.g. the Space Capital board). Each posting links
+    to the company's own hiring page, so descriptions are filled in later."""
+    api = f"https://api.getro.com/api/v2/collections/{src['collection']}/search/jobs"
+    found: dict = {}
+    # Interns tagged as such, plus "Summer 2027" titles the board left untagged
+    for body in ({"query": "", "filters": {"seniority": ["internship"]}},
+                 {"query": "summer 2027 intern", "filters": {}}):
+        page = 0
+        while page < 150:
+            res = post_json(api, {"hitsPerPage": 20, "page": page, **body}, timeout=40).get("results") or {}
+            batch = res.get("jobs") or []
+            for j in batch:
+                found[j.get("id")] = j
+            page += 1
+            if not batch or page * 20 >= int(res.get("count") or 0):
+                break
+    jobs = []
+    for j in found.values():
+        jobs.append({
+            "company": ((j.get("organization") or {}).get("name") or "").strip(),
+            "title": (j.get("title") or "").strip(),
+            "location": "; ".join(j.get("locations") or []),
+            "url": strip_tracking(j.get("url", "")),
+            "source": src["name"],
+            "posted": _date_from_epoch(j.get("created_at")),
+            "description": "",
+            "season_hint": "",
+        })
+    return jobs
+
+
 # ------------------------------------------------------------ company boards
 
 def fetch_greenhouse(board: str, company: str) -> list[dict]:
@@ -297,6 +329,8 @@ def fetch_all(cfg: dict) -> tuple[list[dict], list[dict]]:
     tasks = []  # (label, kind, callable)
     for src in cfg.get("list", []):
         tasks.append((src["name"], "Internship list", lambda s=src: fetch_simplify_list(s)))
+    for src in cfg.get("getro", []):
+        tasks.append((src["name"], "Job board", lambda s=src: fetch_getro(s)))
     for c in cfg.get("greenhouse", []):
         tasks.append((c["name"], "Greenhouse", lambda c=c: fetch_greenhouse(c["board"], c["name"])))
     for c in cfg.get("lever", []):

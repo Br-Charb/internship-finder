@@ -33,6 +33,12 @@ greenhouse = [
   { name = "JetZero", board = "jetzero" },
   { name = "Electra Aero", board = "electraaero" },
   { name = "Epirus", board = "epirus" },
+  { name = "Stoke Space", board = "stokespacetechnologies" },
+  { name = "Space Kinetic", board = "spacekinetic" },
+  { name = "Freeform", board = "freeformfuturecorp" },
+  { name = "GITAI", board = "gitai" },
+  { name = "AST SpaceMobile", board = "astspacemobile" },
+  { name = "HawkEye 360", board = "hawkeye360" },
   # Removed Oct 2026 (board gone): Axiom Space -> now on Workday below,
   # Boom Supersonic -> moved to Rippling (not supported).
 ]
@@ -40,11 +46,20 @@ greenhouse = [
 lever = [
   { name = "Shield AI", board = "shieldai" },
   { name = "Hermeus", board = "hermeus" },
+  { name = "CesiumAstro", board = "CesiumAstro" },
+  { name = "ispace", board = "ispace-inc" },
+  { name = "Layup Parts", board = "layup" },
 ]
 
 ashby = [
   { name = "Hadrian", board = "hadrian-automation" },
   { name = "Saronic", board = "saronic" },
+  { name = "Antares", board = "Antares" },
+  { name = "Northwood Space", board = "NorthwoodSpace" },
+  { name = "Apex Space", board = "apex-technology-inc" },
+  { name = "Reflect Orbital", board = "reflect-orbital" },
+  { name = "The Exploration Company", board = "the-exploration-company" },
+  { name = "WindBorne Systems", board = "windborne-systems" },
 ]
 
 # Workday career sites (most large aerospace/defense companies).
@@ -93,6 +108,14 @@ urls = [
   "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/main/.github/scripts/listings.json",
 ]
 
+# --- Job boards that collect postings from many companies ----------------
+# Space Capital's board (formerly Space Talent): ~1,300 internships from
+# hundreds of space and defense companies. collection = the number in the
+# board's api.getro.com/api/v2/collections/<collection>/... requests.
+[[getro]]
+name = "Space Capital job board"
+collection = 338
+
 # --- Federal jobs (DoD, Air Force, Navy, NASA) via USAJOBS --------------
 # Free API key: https://developer.usajobs.gov/apirequest/
 # Then add USAJOBS_API_KEY and USAJOBS_EMAIL as repo secrets (see README).
@@ -116,5 +139,9 @@ names = [
   "castelion", "astrobotic", "intuitive machines", "redwire", "aerovironment",
   "kratos", "embraer", "zipline", "voyager space", "voyager technologies", "true anomaly", "radian aerospace",
   "astra space", "abl space", "aerospace corporation", "mitre", "draper",
-  "muon space", "jetzero", "electra aero",
+  "muon space", "jetzero", "electra aero", "cesiumastro", "antares", "northwood space",
+  "reflect orbital", "space kinetic", "freeform", "gitai", "ispace", "exploration company",
+  "layup parts", "windborne", "ast spacemobile", "hawkeye 360", "star catcher",
+  "cowboy space", "gravitics", "katalyst space", "starpath", "array labs", "lynk global",
+  "e-space", "blue canyon", "viasat", "iridium", "lunar outpost", "astroforge", "offworld",
 ]

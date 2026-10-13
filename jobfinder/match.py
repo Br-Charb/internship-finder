@@ -74,6 +74,7 @@ class Matcher:
         self.gaps = [{"name": g["name"], "aliases": compile_terms(g.get("aliases", []))}
                      for g in profile.get("gap", [])]
         self.aero_companies = [n.lower() for n in sources_cfg.get("aerospace_companies", {}).get("names", [])]
+        self.qc = None  # set by run.py to a quals.QualChecker
 
     # ---------------------------------------------------------- quick filter
 
@@ -282,7 +283,17 @@ class Matcher:
             flags.append({"kind": "info", "label": "Full description not loaded"})
         elig = max(0, elig)
 
-        score = int(min(100, relevance + skills_pts + elig))
+        # ---- qualification-by-qualification check (see quals.py)
+        quals = self.qc.check(desc) if (self.qc and desc) else None
+        req_penalty = 0
+        if quals:
+            # Skip misses the eligibility points above already took off
+            already = ("Grad date", "Asks for a grad", "Wants senior", "Needs GPA")
+            hard = [r for r in quals.get("required", [])
+                    if r["status"] == "missing" and not r["why"].startswith(already)]
+            req_penalty = min(15, 5 * len(hard))
+
+        score = int(max(0, min(100, relevance + skills_pts + elig) - req_penalty))
         if score < self.min_score:
             return None, "low score"
         tier = "strong" if score >= 72 else "good" if score >= 56 else "look"
@@ -290,7 +301,9 @@ class Matcher:
         return {
             "score": score,
             "tier": tier,
-            "parts": {"aerospace": relevance, "skills": skills_pts, "eligibility": elig},
+            "parts": {"aerospace": relevance, "skills": skills_pts, "eligibility": elig,
+                      "requirements": -req_penalty},
+            "quals": quals,
             "matched": matched,
             "related": related,
             "gaps": gaps,

@@ -11,6 +11,10 @@ school = "University of Central Florida"
 graduation_year = 2029
 # Optional. Leave at 0.0 to skip GPA checks (the repo is public).
 gpa = 0.0
+# Most aerospace/defense internships require U.S. citizenship (ITAR) or a
+# clearance. Set this to true or false so those requirements get checked;
+# leave it commented out and they show as "confirm".
+# us_citizen = true
 
 [search]
 # The season you're hunting for. Postings that clearly name a different
@@ -23,6 +27,9 @@ include_unstated_season = true
 min_score = 40
 # Ignore postings older than this many days (when the date is known).
 max_age_days = 150
+# Postings older than this many days go in their own "may already be
+# filled" section at the bottom of the page.
+fresh_days = 30
 
 [ai]
 # Optional: a short written fit review by Claude for top matches.
@@ -102,7 +109,7 @@ related = ["fluent", "ansys fluent", "openfoam", "cfx", "converge"]
 [[skill]]
 name = "Aerodynamics"
 weight = 3
-aliases = ["aerodynamic*", "downforce", "airfoil*", "lift and drag", "drag", "wing design"]
+aliases = ["aerodynamic*", "downforce", "airfoil*", "lift and drag", "drag", "wing design", "fluid mechanics", "fluid dynamics"]
 
 [[skill]]
 name = "SolidWorks / CAD"

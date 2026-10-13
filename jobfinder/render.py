@@ -79,6 +79,14 @@ details.why summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--go
 .acts{display:flex;flex-direction:column;gap:8px;padding:12px 14px 12px 0;justify-content:center}
 .btn{font:600 15px/1 var(--cond);text-decoration:none;text-align:center;padding:10px 16px;border-radius:6px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);white-space:nowrap;cursor:pointer}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line);font-weight:500}
+.qh{font:600 14px/1.3 var(--cond);margin:10px 0 0;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.ql{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:5px;font-size:14px}
+.ql li{display:grid;grid-template-columns:18px 1fr;gap:6px}
+.ql b{text-align:center} .ql small{display:block;color:var(--muted)}
+.q-met b{color:var(--strong)} .q-partial b{color:var(--look)} .q-missing b{color:var(--warn)} .q-check b,.q-soft b{color:var(--muted)}
+.sect{margin:28px 0 0;padding-top:18px;border-top:2px solid var(--line)}
+.sect h2{font:700 24px/1.2 var(--cond);margin:0 0 4px}
+.sect p{margin:0;color:var(--muted);font-size:14px;max-width:70ch}
 .empty{padding:40px 20px;text-align:center;background:var(--panel);border:1px dashed var(--line);border-radius:8px;color:var(--muted)}
 footer{margin-top:36px;font-size:14px;color:var(--muted)}
 footer details summary{cursor:pointer;font-weight:600}
@@ -116,6 +124,7 @@ footer td,footer th{text-align:left;padding:4px 8px;border-bottom:1px solid var(
     <input type="search" id="q" placeholder="Search company, title, location, skill" aria-label="Search">
     <select id="sort" aria-label="Sort">
       <option value="score">Best fit first</option>
+      <option value="reqs">Most qualifications met</option>
       <option value="new">Newest first</option>
       <option value="company">Company A to Z</option>
     </select>
@@ -159,10 +168,12 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const fmt = iso => { if(!iso) return ''; const d = new Date(iso + 'T12:00:00'); return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); };
 const TIER = {strong:'Strong fit', good:'Good fit', look:'Worth a look'};
 const weekAgo = new Date(Date.now() - 7*864e5).toISOString().slice(0,10);
+const ageDays = iso => iso ? Math.round((Date.parse(D.today + 'T12:00:00') - Date.parse(iso + 'T12:00:00')) / 864e5) : null;
+const isOld = j => ageDays(j.posted) > D.fresh_days;
 
 $('sub').textContent = D.sources.length ? `Scored against ${D.name}'s resume. Updated ${D.updated_label}.` : 'Waiting for the first scan.';
 const c = D.counts;
-$('counts').innerHTML = `<span><b>${c.total}</b>matches</span><span><b>${c.strong}</b>strong fits</span><span><b>${c.new_today}</b>new today</span>`;
+$('counts').innerHTML = `<span><b>${c.total}</b>matches</span><span><b>${c.strong}</b>strong fits</span><span><b>${c.new_today}</b>new today</span><span><b>${c.old}</b>posted ${D.fresh_days}+ days ago</span>`;
 
 function bars(list, color){
   if(!list.length) return '<p style="color:var(--muted);font-size:14px;margin:0">Not enough descriptions yet.</p>';
@@ -176,19 +187,41 @@ $('src').innerHTML = '<tr><th>Source</th><th>Type</th><th>Result</th></tr>' + D.
 const bad = D.sources.filter(s => !s.ok && !String(s.error).startsWith('skipped')).length;
 $('foot').textContent = `${D.sources.length} sources checked` + (bad ? `, ${bad} failed (see below; fix or remove them in sources.toml).` : '.') + ' Scores are keyword-based estimates. Always read the posting before applying.';
 
+const QI = {met:'✓', partial:'~', missing:'✗', check:'?', soft:'·'};
+const num = x => Number.isInteger(x) ? x : x.toFixed(1);
+const reqPct = j => { const s = j.quals && j.quals.summary; return s && s.required_checked ? s.required_met / s.required_checked : -1; };
+function qualChip(q){
+  const s = q && q.summary;
+  if(!s || !s.required_checked) return '';
+  const cls = s.required_missing ? 'warn' : s.required_met === s.required_checked ? 'good' : '';
+  return `<span class="chip ${cls}">Meets ${num(s.required_met)} of ${s.required_checked} required</span>`;
+}
+function qualList(q){
+  if(!q) return '';
+  const sec = (name, rows) => rows && rows.length ? `<div class="qh">${name}</div><ul class="ql">` + rows.map(r =>
+    `<li class="q-${r.status}"><b>${QI[r.status]}</b><span>${esc(r.text)}${r.why ? `<small>${esc(r.why)}</small>` : (r.status === 'check' ? '<small>Couldn\'t check this one automatically</small>' : '')}</span></li>`).join('') + '</ul>' : '';
+  const s = q.summary;
+  const head = s.required_checked ? `You meet ${num(s.required_met)} of ${s.required_checked} required qualifications I could check` +
+    (s.preferred_total ? `, and ${s.preferred_met} of ${s.preferred_total} preferred` : '') + (s.to_check ? `. ${s.to_check} to confirm yourself.` : '.') : 'Qualifications found, but none I could check automatically.';
+  return `<details class="why"><summary>Qualifications vs your resume</summary><p style="margin:8px 0 0;font-size:14px">${head}</p>${sec('Required', q.required)}${sec('Preferred', q.preferred)}</details>`;
+}
+
 function card(j){
   const st = status[j.key];
   const chips = [];
   if(j.first_seen >= D.today) chips.push('<span class="chip new">New</span>');
+  const qc = qualChip(j.quals); if(qc) chips.push(qc);
+  if(isOld(j)) chips.push(`<span class="chip warn">Posted ${ageDays(j.posted)} days ago</span>`);
   for(const f of j.flags) chips.push(`<span class="chip ${f.kind === 'info' ? '' : f.kind}">${esc(f.label)}</span>`);
   const rows = [];
   if(j.matched.length) rows.push(`<dt>Your skills it asks for</dt><dd>${esc(j.matched.join(', '))}</dd>`);
   if(j.related.length) rows.push(`<dt>Transferable</dt><dd>${esc(j.related.join(', '))}</dd>`);
   if(j.gaps.length) rows.push(`<dt>Not on your resume</dt><dd>${esc(j.gaps.join(', '))}</dd>`);
-  rows.push(`<dt>Score breakdown</dt><dd>Aerospace ${j.parts.aerospace}/40, skills ${j.parts.skills}/35, eligibility ${j.parts.eligibility}/25</dd>`);
+  rows.push(`<dt>Score breakdown</dt><dd>Aerospace ${j.parts.aerospace}/40, skills ${j.parts.skills}/35, eligibility ${j.parts.eligibility}/25` +
+    (j.parts.requirements ? `, ${j.parts.requirements} for missing required qualifications` : '') + `</dd>`);
   rows.push(`<dt>Found via</dt><dd>${esc(j.source)}</dd>`);
   const ai = j.ai ? `<div class="ai"><b>Claude's take (${esc(j.ai.fit)}):</b> ${esc(j.ai.summary)}${j.ai.talking_point ? '<br><b>Lead with:</b> ' + esc(j.ai.talking_point) : ''}</div>` : '';
-  const meta = [j.location && `<span>${esc(j.location)}</span>`, j.posted && `<span>Posted ${fmt(j.posted)}</span>`, `<span>Found ${fmt(j.first_seen)}</span>`].filter(Boolean).join('');
+  const meta = [j.location && `<span>${esc(j.location)}</span>`, j.posted && `<span>Posted ${fmt(j.posted)} (${ageDays(j.posted) === 0 ? 'today' : ageDays(j.posted) + 'd ago'})</span>`, `<span>Found ${fmt(j.first_seen)}</span>`].filter(Boolean).join('');
   return `<article class="strip t-${j.tier} ${st ? 'done' : ''}" data-key="${esc(j.key)}">
     <div class="score" title="Fit score out of 100"><b>${j.score}</b><small>${TIER[j.tier]}</small></div>
     <div class="main">
@@ -197,6 +230,7 @@ function card(j){
       <div class="meta">${meta}</div>
       <div class="chips">${chips.join('')}</div>
       ${ai}
+      ${qualList(j.quals)}
       <details class="why"><summary>Why this score</summary><dl>${rows.join('')}</dl></details>
     </div>
     <div class="acts">
@@ -224,13 +258,23 @@ function render(){
   const s = $('sort').value;
   jobs.sort(s === 'new' ? (a,b) => (b.first_seen + (b.posted||'')).localeCompare(a.first_seen + (a.posted||'')) || b.score - a.score
          : s === 'company' ? (a,b) => a.company.localeCompare(b.company) || b.score - a.score
+         : s === 'reqs' ? (a,b) => reqPct(b) - reqPct(a) || b.score - a.score
          : (a,b) => b.score - a.score);
   if(!D.jobs.length){
     $('list').innerHTML = `<div class="empty"><p><b>No scan results yet.</b></p><p>In your GitHub repo, open the Actions tab, choose “Daily job scan”, and click “Run workflow”. This page fills in about five minutes later.</p></div>`;
     return;
   }
-  $('list').innerHTML = jobs.length ? jobs.map(card).join('') :
-    '<div class="empty">No postings match these filters. Clear the search or choose “All”.</div>';
+  if(!jobs.length){
+    $('list').innerHTML = '<div class="empty">No postings match these filters. Clear the search or choose “All”.</div>';
+    return;
+  }
+  // Recent postings first; older ones get their own section at the bottom
+  const recent = jobs.filter(j => !isOld(j)), old = jobs.filter(isOld);
+  $('list').innerHTML = (recent.length ? recent.map(card).join('') :
+      `<div class="empty">Nothing posted in the last ${D.fresh_days} days matches these filters.</div>`) +
+    (old.length ? `<section class="sect"><h2>Posted over ${D.fresh_days} days ago (${old.length})</h2>
+      <p>These are still listed, so they haven't closed yet, but older postings are more likely to already be filled.
+      Apply to the strong fits, and don't count on hearing back.</p></section>` + old.map(card).join('') : '');
 }
 
 document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
@@ -263,7 +307,16 @@ def _pct_list(counter: dict, total: int, top: int = 8) -> list[dict]:
     return [{"name": k, "count": v, "pct": round(100 * v / total)} for k, v in items if v]
 
 
+def _is_old(job: dict, today: dt.date, fresh_days: int) -> bool:
+    """Posted more than fresh_days ago (unknown dates count as fresh)."""
+    try:
+        return (today - dt.date.fromisoformat((job.get("posted") or "")[:10])).days > fresh_days
+    except ValueError:
+        return False
+
+
 def build_page(jobs: list[dict], sources: list[dict], profile: dict, now: dt.datetime) -> str:
+    fresh_days = int(profile["search"].get("fresh_days", 30))
     with_desc = [j for j in jobs if j.get("has_description")]
     have, need = {}, {}
     for j in with_desc:
@@ -274,7 +327,7 @@ def build_page(jobs: list[dict], sources: list[dict], profile: dict, now: dt.dat
     today = now.date().isoformat()
     page_jobs = [{k: j.get(k) for k in (
         "key", "company", "title", "location", "url", "source", "posted", "first_seen",
-        "score", "tier", "parts", "matched", "related", "gaps", "flags", "season", "ai")} for j in jobs]
+        "score", "tier", "parts", "matched", "related", "gaps", "flags", "season", "ai", "quals")} for j in jobs]
     try:
         from zoneinfo import ZoneInfo
         eastern = now.astimezone(ZoneInfo("America/New_York"))
@@ -286,6 +339,7 @@ def build_page(jobs: list[dict], sources: list[dict], profile: dict, now: dt.dat
         "updated_label": (f"{eastern:%b} {eastern.day}, {eastern.year} at "
                           f"{eastern.hour % 12 or 12}:{eastern:%M %p} ET") if jobs or sources else "never",
         "today": today,
+        "fresh_days": fresh_days,
         "jobs": page_jobs,
         "have": _pct_list(have, len(with_desc)),
         "need": _pct_list(need, len(with_desc)),
@@ -294,32 +348,41 @@ def build_page(jobs: list[dict], sources: list[dict], profile: dict, now: dt.dat
             "total": len(jobs),
             "strong": sum(1 for j in jobs if j["tier"] == "strong"),
             "new_today": sum(1 for j in jobs if j.get("first_seen") == today),
+            "old": sum(1 for j in jobs if _is_old(j, now.date(), fresh_days)),
         },
     }
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     return TEMPLATE.replace("__DATA__", blob)
 
 
-def update_readme(path: Path, jobs: list[dict], page_url: str, now: dt.datetime, top: int = 25) -> None:
+def update_readme(path: Path, jobs: list[dict], page_url: str, now: dt.datetime, top: int = 25,
+                  fresh_days: int = 30) -> None:
     start, end = "<!-- JOBS:START -->", "<!-- JOBS:END -->"
     text = path.read_text(encoding="utf-8")
     if start not in text or end not in text:
         return
     today = now.date().isoformat()
+    fresh = [j for j in jobs if not _is_old(j, now.date(), fresh_days)]
     lines = [
         f"**{len(jobs)} matches** as of {now:%b} {now.day}, {now.year}. "
         f"Full list with filters: **[open the job page]({page_url})**",
         "",
-        "| Fit | Company | Role | Location | Apply |",
-        "|---|---|---|---|---|",
+        f"Showing postings from the last {fresh_days} days. "
+        f"{len(jobs) - len(fresh)} older ones are in their own section on the page.",
+        "",
+        "| Fit | Company | Role | Required quals met | Location | Posted | Apply |",
+        "|---|---|---|---|---|---|---|",
     ]
-    for j in sorted(jobs, key=lambda j: -j["score"])[:top]:
+    for j in sorted(fresh, key=lambda j: -j["score"])[:top]:
         new = " 🆕" if j.get("first_seen") == today else ""
         loc = re.sub(r"\s+", " ", (j.get("location") or ""))[:40]
         title = (j["title"] or "").replace("|", "/")
-        lines.append(f"| {j['score']} | {j['company'].replace('|', '/')} | {title}{new} | {loc} | [Apply]({j['url']}) |")
+        s = (j.get("quals") or {}).get("summary") or {}
+        reqs = f"{s['required_met']:g} of {s['required_checked']}" if s.get("required_checked") else "–"
+        lines.append(f"| {j['score']} | {j['company'].replace('|', '/')} | {title}{new} | {reqs} | {loc} "
+                     f"| {j.get('posted') or '?'} | [Apply]({j['url']}) |")
     if not jobs:
-        lines.append("| | No matches yet | Run the workflow from the Actions tab | | |")
+        lines.append("| | No matches yet | Run the workflow from the Actions tab | | | | |")
     block = start + "\n" + "\n".join(lines) + "\n" + end
     text = re.sub(re.escape(start) + r".*?" + re.escape(end), lambda _: block, text, flags=re.S)
     path.write_text(text, encoding="utf-8")
