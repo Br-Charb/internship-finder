@@ -60,6 +60,34 @@ def is_target_job(title: str, scope: str = "internships", employment_type: str =
     )
 
 
+_PHD = re.compile(r"(?i)(?<![a-z])(?:ph\.?\s*d\.?|doctoral|doctorate)(?![a-z])")
+_NON_PHD_DEGREE = re.compile(
+    r"(?i)(?<![a-z])(?:bachelor(?:'s)?|master(?:'s)?|undergraduate|"
+    r"b\.?\s*s\.?|b\.?\s*a\.?|m\.?\s*s\.?|m\.?\s*a\.?)(?![a-z])"
+)
+_PHD_EXCLUSIVE = re.compile(
+    r"(?i)(?:ph\.?\s*d\.?|doctoral|doctorate)\s+(?:students?|candidates?)\s+only|"
+    r"(?:must|required to|currently|should)\s+(?:be\s+)?(?:enrolled|pursuing|working toward|"
+    r"a candidate)\b[^.!?\n]{0,100}(?:ph\.?\s*d\.?|doctoral|doctorate)"
+)
+
+
+def is_phd_exclusive_job(title: str, description: str = "") -> bool:
+    """Reject clearly PhD-only roles without guessing about ambiguous degree text.
+
+    A PhD marker in the title is considered exclusive unless the same title also
+    names a bachelor's or master's path. In descriptions, only a sentence that
+    explicitly requires doctoral enrollment is rejected, and a sentence that
+    also permits a bachelor's or master's degree remains eligible.
+    """
+    if _PHD.search(title or "") and not _NON_PHD_DEGREE.search(title or ""):
+        return True
+    for sentence in re.split(r"\n+|(?<=[.!?])\s+", description or ""):
+        if _PHD_EXCLUSIVE.search(sentence) and not _NON_PHD_DEGREE.search(sentence):
+            return True
+    return False
+
+
 def is_united_states_job(location: str, country: str = "") -> bool:
     """Return true only when structured location text identifies the U.S.
 
@@ -129,8 +157,8 @@ class Category:
         return score, strong_hits + title_hits + desc_hits
 
 
-# Tie order is intentional: a discipline-specific engineering match beats the
-# generic Finance keyword "analyst" (for example, "Propulsion Analyst Intern").
+# Tie order is intentional: a discipline-specific engineering or accounting
+# match beats the generic Finance keyword "analyst".
 CATEGORIES: tuple[Category, ...] = (
     Category(
         key="aerospace",
@@ -225,13 +253,38 @@ CATEGORIES: tuple[Category, ...] = (
         strong_title_terms=("software engineer", "frontend engineer", "backend engineer", "full stack engineer"),
     ),
     Category(
+        key="accounting",
+        label="Accounting",
+        webhook_env="DISCORD_WEBHOOK_ACCOUNTING",
+        color=0x1ABC9C,
+        title_terms=(
+            "accounting", "accountant", "audit", "auditor", "assurance", "tax",
+            "taxation", "bookkeeping", "bookkeeper", "cpa", "financial reporting",
+            "financial controls", "internal controls", "forensic accounting",
+            "accounts payable", "accounts receivable", "payroll accounting",
+            "cost accounting", "fund accounting", "transaction advisory",
+        ),
+        description_terms=(
+            "accounting", "public accounting", "audit", "assurance", "taxation",
+            "tax compliance", "tax return", "tax provision", "cpa", "gaap", "gaas",
+            "financial statements", "financial reporting", "general ledger",
+            "journal entries", "month-end close", "internal controls", "sox",
+            "accounts payable", "accounts receivable", "bookkeeping", "reconciliation",
+            "cost accounting", "forensic accounting", "external audit", "internal audit",
+        ),
+        strong_title_terms=(
+            "accounting intern", "audit intern", "auditing intern", "assurance intern",
+            "tax intern", "taxation intern", "accountant intern", "cpa intern",
+        ),
+    ),
+    Category(
         key="finance",
         label="Finance / Info Systems / FinTech",
         webhook_env="DISCORD_WEBHOOK_FINANCE",
         color=0x9B59B6,
         title_terms=(
-            "finance", "financial", "fp&a", "fintech", "analyst", "accounting", "audit",
-            "treasury", "tax", "actuarial", "underwriting", "credit", "banking",
+            "finance", "financial", "fp&a", "fintech", "analyst", "treasury",
+            "actuarial", "underwriting", "credit", "banking",
             "investment banking", "capital markets", "asset management", "wealth management",
             "portfolio", "private equity", "venture capital", "quantitative", "quant",
             "trading", "trader", "payments", "payment operations", "fraud", "risk analyst",
@@ -240,8 +293,8 @@ CATEGORIES: tuple[Category, ...] = (
             "enterprise systems", "erp", "cybersecurity", "it audit", "it",
         ),
         description_terms=(
-            "financial analysis", "financial modeling", "fp&a", "fintech", "accounting",
-            "audit", "treasury", "corporate finance", "investment banking", "capital markets",
+            "financial analysis", "financial modeling", "fp&a", "fintech", "treasury",
+            "corporate finance", "investment banking", "capital markets",
             "asset management", "wealth management", "portfolio management", "private equity",
             "venture capital", "equity research", "fixed income", "securities", "derivatives",
             "quantitative finance", "algorithmic trading", "financial markets", "risk management",
@@ -249,7 +302,7 @@ CATEGORIES: tuple[Category, ...] = (
             "payments", "payment processing", "banking", "fraud detection", "financial technology",
             "information systems", "management information systems", "information technology",
             "business systems", "enterprise systems", "business intelligence", "erp", "sap",
-            "oracle financials", "data analytics", "power bi", "tableau", "excel", "vba",
+            "data analytics", "power bi", "tableau", "excel", "vba",
         ),
         strong_title_terms=(
             "financial analyst", "finance analyst", "fp&a", "quantitative analyst",
@@ -328,69 +381,3 @@ def requirements_snippet(description: str, limit: int = 750) -> str:
     if len(snippet) <= limit:
         return snippet
     return snippet[: limit - 1].rsplit(" ", 1)[0] + "…"
-
-
-_ACADEMIC_DATE_TEXT = (
-    r"(?:(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|"
-    r"jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|"
-    r"dec(?:ember)?|spring|summer|fall|autumn|winter)\s+20\d{2}|20\d{2})"
-)
-_ACADEMIC_DATE = re.compile(_ACADEMIC_DATE_TEXT, re.IGNORECASE)
-_GRADUATION_TRIGGER = re.compile(
-    r"(?i)(?:graduat(?:e|es|ed|ing|ion)|class\s+of|"
-    r"(?:expected|anticipated)\s+(?:degree\s+)?completion|"
-    r"degree\s+(?:completion|conferral)\s+date)"
-)
-_MONTHS = {
-    "january": "Jan", "jan": "Jan", "february": "Feb", "feb": "Feb",
-    "march": "Mar", "mar": "Mar", "april": "Apr", "apr": "Apr",
-    "may": "May", "june": "Jun", "jun": "Jun", "july": "Jul", "jul": "Jul",
-    "august": "Aug", "aug": "Aug", "september": "Sep", "sept": "Sep", "sep": "Sep",
-    "october": "Oct", "oct": "Oct", "november": "Nov", "nov": "Nov",
-    "december": "Dec", "dec": "Dec",
-}
-
-
-def _normalize_academic_date(value: str) -> str:
-    parts = value.strip().split()
-    if len(parts) == 1:
-        return parts[0]
-    first = parts[0].lower()
-    label = _MONTHS.get(first, first.title())
-    if label == "Autumn":
-        label = "Fall"
-    return f"{label} {parts[-1]}"
-
-
-def graduation_window(description: str) -> str:
-    """Extract an explicitly stated graduation date/range, otherwise ``?``.
-
-    Only sentences or lines that mention graduation, class year, or degree
-    completion are considered. This avoids mistaking the internship dates or a
-    copyright year for the student's graduation window.
-    """
-    if not description:
-        return "?"
-
-    chunks = re.split(r"\n+|(?<=[.!?])\s+", description)
-    for raw_chunk in chunks:
-        chunk = re.sub(r"\s+", " ", raw_chunk).strip()
-        if not chunk or not _GRADUATION_TRIGGER.search(chunk):
-            continue
-        dates = list(dict.fromkeys(
-            _normalize_academic_date(match.group(0))
-            for match in _ACADEMIC_DATE.finditer(chunk)
-        ))
-        if not dates:
-            continue
-        if len(dates) >= 2:
-            return f"{dates[0]} – {dates[1]}"
-
-        lowered = chunk.lower()
-        value = dates[0]
-        if re.search(r"\b(?:or|and)\s+(?:later|after|beyond)\b|\bor\s+later\b", lowered):
-            return f"{value} or later"
-        if re.search(r"\b(?:or|and)\s+(?:earlier|before)\b|\bor\s+earlier\b", lowered):
-            return f"{value} or earlier"
-        return value
-    return "?"

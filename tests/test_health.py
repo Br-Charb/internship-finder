@@ -6,9 +6,9 @@ from unittest.mock import patch
 import run
 
 
-def status(ok=True, count=10, error=""):
+def status(ok=True, count=10, error="", name="Example Co"):
     return [{
-        "name": "Example Co",
+        "name": name,
         "kind": "Greenhouse",
         "tier": 1,
         "group": "software",
@@ -51,6 +51,8 @@ class SourceHealthTests(unittest.TestCase):
             os.environ,
             {
                 "HEALTH_FAILURE_THRESHOLD": "3",
+                "HEALTH_RATE_LIMIT_THRESHOLD": "4",
+                "HEALTH_RECOVERY_THRESHOLD": "2",
                 "HEALTH_HEARTBEAT_HOUR": "8",
                 "HEALTH_TIME_ZONE": "America/New_York",
             },
@@ -76,13 +78,16 @@ class SourceHealthTests(unittest.TestCase):
         self.assertEqual(1, third_post.call_count)
         self.assertTrue(state.records["Example Co"]["failure_alerted"])
 
+        recovering, recovering_post = self.monitor(state, status(True, 12))
+        self.assertEqual(0, recovering["health_events"])
+        recovering_post.assert_not_called()
         recovered, recovered_post = self.monitor(state, status(True, 12))
         self.assertEqual(1, recovered["health_events"])
         self.assertEqual(1, recovered["health_recoveries"])
         self.assertEqual(1, recovered_post.call_count)
         self.assertFalse(state.records["Example Co"]["failure_alerted"])
 
-    def test_zero_alert_requires_prior_nonzero_result(self):
+    def test_valid_zero_results_do_not_create_outage_alerts(self):
         state = HealthState()
         self.monitor(state, status(True, 0))
         self.assertNotIn("Example Co", state.records)
@@ -91,9 +96,26 @@ class SourceHealthTests(unittest.TestCase):
         self.monitor(state, status(True, 0))
         self.monitor(state, status(True, 0))
         result, post = self.monitor(state, status(True, 0))
+        self.assertEqual(0, result["health_events"])
+        post.assert_not_called()
+        self.assertNotIn("Example Co", state.records)
+
+    def test_rate_limited_source_uses_longer_failure_streak(self):
+        state = HealthState()
+        for _ in range(3):
+            result, post = self.monitor(
+                state, status(False, 0, "HTTP 429", name="Microsoft")
+            )
+            self.assertEqual(0, result["health_events"])
+            # The first pass can include the daily heartbeat.
+            self.assertLessEqual(post.call_count, 1)
+
+        result, post = self.monitor(
+            state, status(False, 0, "HTTP 429", name="Microsoft")
+        )
         self.assertEqual(1, result["health_events"])
-        self.assertEqual(1, post.call_count)
-        self.assertTrue(state.records["Example Co"]["zero_alerted"])
+        post.assert_called_once()
+        self.assertTrue(state.records["Microsoft"]["failure_alerted"])
 
     def test_daily_heartbeat_waits_until_eight_eastern(self):
         state = HealthState()

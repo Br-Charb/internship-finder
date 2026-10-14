@@ -3,7 +3,7 @@ import unittest
 
 from jobfinder.match import (
     categorize_job,
-    graduation_window,
+    is_phd_exclusive_job,
     is_recent_posting,
     is_target_job,
     is_united_states_job,
@@ -42,6 +42,22 @@ class CategorizationTests(unittest.TestCase):
         self.assert_category("finance", "Quantitative Trading Intern", "Derivatives and financial markets")
         self.assert_category("finance", "Payments Risk Analyst Intern", "Credit risk and fraud detection")
         self.assert_category("finance", "Business Systems Analyst Intern", "SAP and Power BI")
+
+    def test_accounting(self) -> None:
+        self.assert_category("accounting", "Audit Intern", "Public accounting and GAAP")
+        self.assert_category("accounting", "Tax Internship", "Tax compliance and CPA track")
+        self.assert_category(
+            "accounting",
+            "Assurance Summer Intern",
+            "Review financial statements and internal controls.",
+        )
+
+    def test_accounting_beats_generic_finance(self) -> None:
+        self.assert_category(
+            "accounting",
+            "Accounting and Financial Reporting Intern",
+            "Prepare journal entries and reconciliations.",
+        )
 
     def test_description_requires_two_signals(self) -> None:
         category, _ = categorize_job("General Engineering Intern", "Some Python exposure is useful")
@@ -106,17 +122,21 @@ Responsibilities
         self.assertIn("BS degree", snippet)
         self.assertNotIn("Build things", snippet)
 
-    def test_graduation_window(self) -> None:
-        self.assertEqual(
-            "Dec 2026 – Jun 2027",
-            graduation_window("Candidates must have an expected graduation date between December 2026 and June 2027."),
-        )
-        self.assertEqual(
-            "May 2027 or later",
-            graduation_window("You must be graduating in May 2027 or later."),
-        )
-        self.assertEqual("2028", graduation_window("This opportunity is intended for the class of 2028."))
-        self.assertEqual("?", graduation_window("Currently enrolled in a bachelor's degree program."))
+    def test_phd_exclusive_filter_is_conservative(self) -> None:
+        self.assertTrue(is_phd_exclusive_job("Machine Learning PhD Intern"))
+        self.assertFalse(is_phd_exclusive_job("BS/MS/PhD Research Intern"))
+        self.assertTrue(is_phd_exclusive_job(
+            "Research Intern",
+            "Applicants must be currently pursuing a doctoral degree in computer science.",
+        ))
+        self.assertFalse(is_phd_exclusive_job(
+            "Research Intern",
+            "Applicants may be pursuing a bachelor's, master's, or PhD degree.",
+        ))
+        self.assertFalse(is_phd_exclusive_job(
+            "Engineering Intern",
+            "Work with PhD researchers while pursuing a BS or MS degree.",
+        ))
 
 
 if __name__ == "__main__":

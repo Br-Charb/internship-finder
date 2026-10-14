@@ -27,7 +27,7 @@ from jobfinder.match import (
     CATEGORIES,
     Category,
     categorize_job,
-    graduation_window,
+    is_phd_exclusive_job,
     is_recent_posting,
     is_target_job,
     is_united_states_job,
@@ -42,7 +42,9 @@ SOURCES_FILE = ROOT / "sources.toml"
 DEFAULT_TABLE = "internship-finder-seen"
 CLAIM_LEASE_SECONDS = 15 * 60
 DISCORD_TIMEOUT_SECONDS = 15
-DEFAULT_HEALTH_FAILURE_THRESHOLD = 3
+DEFAULT_HEALTH_FAILURE_THRESHOLD = 6
+DEFAULT_HEALTH_RATE_LIMIT_THRESHOLD = 12
+DEFAULT_HEALTH_RECOVERY_THRESHOLD = 2
 DEFAULT_HEALTH_HEARTBEAT_HOUR = 8
 DEFAULT_HEALTH_TIME_ZONE = "America/New_York"
 
@@ -368,7 +370,6 @@ def discord_payload(job: dict[str, Any], category: Category, matched_terms: list
             "color": category.color,
             "fields": [
                 {"name": "Company", "value": _truncate(str(job.get("company") or "Unknown"), 1024), "inline": True},
-                {"name": "Graduation", "value": graduation_window(description), "inline": True},
                 {"name": "Location", "value": _truncate(str(job.get("location") or "Not listed"), 1024), "inline": False},
                 {"name": "Category", "value": category.label, "inline": True},
                 {"name": "Posted", "value": posted, "inline": True},
@@ -434,11 +435,7 @@ def test_webhooks() -> dict[str, Any]:
             "url": "https://github.com/Br-Charb/internship-finder",
             "source": "Manual Lambda connection test",
             "posted": _utc_now().date().isoformat(),
-            "description": (
-                "Requirements:\n"
-                "- No action needed; this is only a webhook connection test.\n"
-                "- Sample candidates should graduate between December 2027 and June 2028."
-            ),
+            "description": "Requirements:\n- No action needed; this is only a webhook connection test.",
         }
         try:
             post_to_discord(urls[category.key], discord_payload(job, category, ["connection test"]))
@@ -451,7 +448,6 @@ def test_webhooks() -> dict[str, Any]:
     return {
         "webhook_tests_sent": sent,
         "count": len(sent),
-        "sample_graduation": "Dec 2027 – Jun 2028",
     }
 
 
@@ -509,10 +505,23 @@ def _monitor_source_health(
     summary: dict[str, Any],
 ) -> dict[str, int]:
     """Persist source streaks and send one compact health digest when needed."""
-    threshold = max(
+    failure_threshold = max(
         1,
         int(os.environ.get("HEALTH_FAILURE_THRESHOLD", str(DEFAULT_HEALTH_FAILURE_THRESHOLD))),
     )
+    rate_limit_threshold = max(
+        failure_threshold,
+        int(os.environ.get(
+            "HEALTH_RATE_LIMIT_THRESHOLD", str(DEFAULT_HEALTH_RATE_LIMIT_THRESHOLD)
+        )),
+    )
+    recovery_threshold = max(
+        1,
+        int(os.environ.get(
+            "HEALTH_RECOVERY_THRESHOLD", str(DEFAULT_HEALTH_RECOVERY_THRESHOLD)
+        )),
+    )
+    rate_limit_prone = {"Citadel", "Citadel Securities", "Microsoft", "Meta", "LinkedIn"}
     previous = state.source_health([str(status["name"]) for status in source_status])
     changes: list[tuple[str, dict[str, Any], str | None]] = []
     alerts: list[str] = []
@@ -522,58 +531,65 @@ def _monitor_source_health(
         name = str(status["name"])
         prior = previous.get(name, {})
         failures = int(prior.get("failure_streak") or 0)
-        zeroes = int(prior.get("zero_streak") or 0)
+        recovery_streak = int(prior.get("recovery_streak") or 0)
         failure_alerted = bool(prior.get("failure_alerted", False))
-        zero_alerted = bool(prior.get("zero_alerted", False))
         ever_nonzero = bool(prior.get("ever_nonzero", False))
         event_kind: str | None = None
         should_save = False
+        error = str(status.get("error") or "")
+        threshold = (
+            rate_limit_threshold
+            if name in rate_limit_prone or "HTTP 429" in error or "HTTP 403" in error
+            else failure_threshold
+        )
 
         if not status.get("ok"):
             failures = min(failures + 1, threshold)
-            zeroes = 0
-            should_save = failures != int(prior.get("failure_streak") or 0)
+            recovery_streak = 0
+            should_save = (
+                failures != int(prior.get("failure_streak") or 0)
+                or int(prior.get("recovery_streak") or 0) != 0
+                or bool(prior.get("zero_alerted", False))
+            )
             if failures >= threshold and not failure_alerted:
                 event_kind = "failure"
                 failure_alerted = True
-                error = _truncate(str(status.get("error") or "unknown error"), 300)
+                shown_error = _truncate(error or "unknown error", 300)
                 alerts.append(
-                    f"🔴 **{name}** failed {failures} consecutive checks — `{error}`"
+                    f"🔴 **{name}** failed {failures} consecutive checks — `{shown_error}`"
                 )
-        elif int(status.get("count") or 0) == 0:
-            failures = 0
-            if ever_nonzero:
-                zeroes = min(zeroes + 1, threshold)
-                should_save = True
-                if zeroes >= threshold and not zero_alerted:
-                    event_kind = "zero"
-                    zero_alerted = True
-                    alerts.append(
-                        f"🟠 **{name}** returned 0 jobs for {zeroes} consecutive checks "
-                        "after previously returning jobs."
-                    )
-            elif prior:
-                should_save = failures != int(prior.get("failure_streak") or 0)
         else:
             count = int(status.get("count") or 0)
-            if failure_alerted or zero_alerted:
-                event_kind = "recovery"
-                recoveries += 1
-                alerts.append(f"🟢 **{name}** recovered and returned {count} jobs.")
-            should_save = (
-                not ever_nonzero or failures > 0 or zeroes > 0
-                or failure_alerted or zero_alerted
-            )
-            ever_nonzero = True
-            failures = zeroes = 0
-            failure_alerted = zero_alerted = False
+            if failure_alerted:
+                recovery_streak = min(recovery_streak + 1, recovery_threshold)
+                should_save = True
+                if recovery_streak >= recovery_threshold:
+                    event_kind = "recovery"
+                    recoveries += 1
+                    alerts.append(
+                        f"🟢 **{name}** recovered after {recovery_streak} consecutive "
+                        f"successful checks and returned {count} jobs."
+                    )
+                    failure_alerted = False
+                    failures = recovery_streak = 0
+            else:
+                should_save = bool(prior) and (
+                    failures > 0
+                    or recovery_streak > 0
+                    or bool(prior.get("zero_alerted", False))
+                    or int(prior.get("zero_streak") or 0) > 0
+                )
+                failures = recovery_streak = 0
+            if count > 0:
+                ever_nonzero = True
 
         if should_save or event_kind:
             changes.append((name, {
                 "failure_streak": failures,
-                "zero_streak": zeroes,
+                "recovery_streak": recovery_streak,
+                "zero_streak": 0,
                 "failure_alerted": failure_alerted,
-                "zero_alerted": zero_alerted,
+                "zero_alerted": False,
                 "ever_nonzero": ever_nonzero,
                 "last_count": int(status.get("count") or 0),
                 "last_error": str(status.get("error") or "")[:500],
@@ -593,8 +609,9 @@ def _monitor_source_health(
             for _name, values, event_kind in changes:
                 if event_kind == "failure":
                     values["failure_alerted"] = False
-                elif event_kind == "zero":
-                    values["zero_alerted"] = False
+                elif event_kind == "recovery":
+                    values["failure_alerted"] = True
+                    values["recovery_streak"] = recovery_threshold - 1
 
     for name, values, _event_kind in changes:
         state.save_source_health(name, values)
@@ -699,10 +716,173 @@ def _skip_unchanged_lists(
     return filtered, pending, cached
 
 
+def _has_known_recent_posting_date(posted: str, max_age_days: int) -> bool:
+    """Require a parseable date for a historical backfill."""
+    try:
+        dt.date.fromisoformat(str(posted)[:10])
+    except ValueError:
+        return False
+    return is_recent_posting(posted, max_age_days=max_age_days)
+
+
+def _execute_category_backfill(
+    *,
+    state: DynamoSeenJobs,
+    jobs_by_id: dict[str, dict[str, Any]],
+    source_status: list[dict[str, Any]],
+    pending_revisions: dict[str, str],
+    cached_lists: list[str],
+    raw_job_count: int,
+    target_category: Category,
+    webhooks: dict[str, str],
+    description_limit: int,
+    delivery_limit: int,
+    max_age_days: int,
+    source_partition: tuple[int, int] | None,
+) -> dict[str, Any]:
+    """Deliver a category's recent history without disturbing normal job IDs.
+
+    Synthetic DynamoDB keys make this operation idempotent and independent of
+    the original catalog seed. At the same time, newly added source catalogs
+    are baselined under their normal keys so the next scheduled scan cannot
+    replay non-accounting jobs from those sources.
+    """
+    all_jobs = list(jobs_by_id.values())
+    globally_known = state.known_ids(list(jobs_by_id))
+    global_new = [job for job in all_jobs if job["key"] not in globally_known]
+
+    phd_exclusive: list[dict[str, Any]] = []
+    outside_us: list[dict[str, Any]] = []
+    stale: list[dict[str, Any]] = []
+    unknown_posted: list[dict[str, Any]] = []
+    candidates: list[dict[str, Any]] = []
+    for job in all_jobs:
+        if is_phd_exclusive_job(str(job.get("title") or ""), str(job.get("description") or "")):
+            phd_exclusive.append(job)
+        elif not is_united_states_job(
+            str(job.get("location") or ""), str(job.get("country") or "")
+        ):
+            outside_us.append(job)
+        elif not str(job.get("posted") or ""):
+            unknown_posted.append(job)
+        elif not _has_known_recent_posting_date(str(job.get("posted") or ""), max_age_days):
+            stale.append(job)
+        else:
+            candidates.append(job)
+
+    loaded = _fill_descriptions(candidates, description_limit)
+    eligible_candidates: list[dict[str, Any]] = []
+    for job in candidates:
+        if is_phd_exclusive_job(str(job.get("title") or ""), str(job.get("description") or "")):
+            phd_exclusive.append(job)
+        else:
+            eligible_candidates.append(job)
+    candidates = eligible_candidates
+
+    classified: dict[str, Category] = {}
+    routed: list[tuple[dict[str, Any], Category, list[str]]] = []
+    for job in candidates:
+        category, terms = categorize_job(
+            str(job.get("title") or ""), str(job.get("description") or "")
+        )
+        if category:
+            classified[job["key"]] = category
+            if category.key == target_category.key:
+                routed.append((job, category, terms))
+
+    # Record every newly introduced normal job before the scheduler is enabled.
+    seeded = ignored = claim_conflicts = 0
+    for job in global_new:
+        category = classified.get(job["key"])
+        if state.seed(job, category):
+            seeded += 1
+            if category is None:
+                ignored += 1
+        else:
+            claim_conflicts += 1
+
+    backfill_rows: list[tuple[dict[str, Any], Category, list[str]]] = []
+    for job, category, terms in routed:
+        synthetic = dict(job)
+        synthetic["key"] = f"__backfill__:{target_category.key}:{job['key']}"
+        backfill_rows.append((synthetic, category, terms))
+    backfill_rows.sort(
+        key=lambda row: (str(row[0].get("posted") or ""), str(row[0].get("company") or "")),
+        reverse=True,
+    )
+    already_delivered = state.known_ids([job["key"] for job, _category, _terms in backfill_rows])
+    pending = [row for row in backfill_rows if row[0]["key"] not in already_delivered]
+
+    delivered = failures = 0
+    for job, category, terms in pending[:delivery_limit]:
+        token = state.claim(job, category)
+        if token is None:
+            claim_conflicts += 1
+            continue
+        try:
+            post_to_discord(webhooks[category.key], discord_payload(job, category, terms))
+        except Exception as error:
+            failures += 1
+            print(f"ERROR backfill delivery {job['key']}: {error}", file=sys.stderr)
+            state.release(job["key"], token)
+            continue
+        state.complete(job["key"], token)
+        delivered += 1
+
+    failed_sources = [status["name"] for status in source_status if not status["ok"]]
+    deferred = max(0, len(pending) - delivery_limit)
+    summary = {
+        "active_tiers": sorted({int(status["tier"]) for status in source_status}),
+        "schedule_slot": None,
+        "seed_partition": (
+            {"index": source_partition[0], "count": source_partition[1]}
+            if source_partition is not None else None
+        ),
+        "backfill_category": target_category.key,
+        "sources_checked": len(source_status),
+        "raw_jobs": raw_job_count,
+        "eligible_unique_jobs": len(jobs_by_id),
+        "previously_seen": len(globally_known),
+        "unseen": len(global_new),
+        "us_recent_candidates": len(candidates),
+        "phd_exclusive": len({job["key"] for job in phd_exclusive}),
+        "outside_us_or_unknown": len(outside_us),
+        "stale": len(stale),
+        "unknown_posting_date": len(unknown_posted),
+        "max_posting_age_days": max_age_days,
+        "descriptions_loaded": loaded,
+        "categorized": len(routed),
+        "backfill_previously_delivered": len(already_delivered),
+        "delivered": delivered,
+        "seeded": seeded,
+        "ignored": ignored,
+        "claim_conflicts": claim_conflicts,
+        "delivery_failures": failures,
+        "deferred_by_limit": deferred,
+        "unchanged_lists_skipped": cached_lists,
+        "failed_sources": failed_sources,
+        "health_events": 0,
+        "health_recoveries": 0,
+        "health_heartbeat_sent": 0,
+        "health_delivery_failures": 0,
+    }
+
+    source_ok = {status["name"]: status["ok"] for status in source_status}
+    if not failures and not deferred:
+        for source_name, revision in pending_revisions.items():
+            if source_ok.get(source_name):
+                state.save_source_revision(source_name, revision)
+    print(json.dumps(summary, sort_keys=True))
+    if failures:
+        raise RuntimeError(f"{failures} Discord backfill attempt(s) failed; released for retry")
+    return summary
+
+
 def execute(
     seed_only: bool = False,
     only_sources: set[str] | None = None,
     seed_partition: tuple[int, int] | None = None,
+    backfill_category: str | None = None,
 ) -> dict[str, Any]:
     """Fetch, route, deliver, and persist one complete scan."""
     config = tomllib.loads(SOURCES_FILE.read_text(encoding="utf-8"))
@@ -714,13 +894,21 @@ def execute(
     if not table_name:
         raise ValueError("DYNAMODB_TABLE cannot be empty")
 
+    if seed_only and backfill_category:
+        raise ValueError("seed_only and backfill_category cannot be combined")
+    target_category = next(
+        (category for category in CATEGORIES if category.key == backfill_category), None
+    )
+    if backfill_category and target_category is None:
+        raise ValueError(f"Unknown backfill category: {backfill_category}")
+
     webhooks = {} if seed_only else _webhook_urls()
     state = DynamoSeenJobs(table_name)
 
     tiers = {1, 2, 3}
-    schedule_slot = None if seed_only or only_sources else _five_minute_slot()
+    schedule_slot = None if seed_only or only_sources or backfill_category else _five_minute_slot()
     config, pending_revisions, cached_lists = _skip_unchanged_lists(
-        config, state, force=seed_only
+        config, state, force=seed_only or bool(backfill_category)
     )
 
     scope_note = f" selected={sorted(only_sources)}" if only_sources else ""
@@ -735,15 +923,35 @@ def execute(
         partition=seed_partition,
     )
     jobs_by_id = _deduplicate(raw_jobs, scope)
+    if target_category is not None:
+        return _execute_category_backfill(
+            state=state,
+            jobs_by_id=jobs_by_id,
+            source_status=source_status,
+            pending_revisions=pending_revisions,
+            cached_lists=cached_lists,
+            raw_job_count=len(raw_jobs),
+            target_category=target_category,
+            webhooks=webhooks,
+            description_limit=description_limit,
+            delivery_limit=delivery_limit,
+            max_age_days=max_age_days,
+            source_partition=seed_partition,
+        )
     known = state.known_ids(list(jobs_by_id))
     new_jobs = [job for key, job in jobs_by_id.items() if key not in known]
     new_jobs.sort(key=lambda job: (str(job.get("posted") or ""), str(job.get("company") or "")), reverse=True)
 
+    phd_exclusive: list[dict[str, Any]] = []
     outside_us: list[dict[str, Any]] = []
     stale: list[dict[str, Any]] = []
     candidates: list[dict[str, Any]] = []
     for job in new_jobs:
-        if not is_united_states_job(
+        if is_phd_exclusive_job(
+            str(job.get("title") or ""), str(job.get("description") or "")
+        ):
+            phd_exclusive.append(job)
+        elif not is_united_states_job(
             str(job.get("location") or ""),
             str(job.get("country") or ""),
         ):
@@ -756,6 +964,16 @@ def execute(
     # A baseline never sends notifications, so fetching thousands of full job
     # pages would add time and network cost without changing user-visible output.
     loaded = 0 if seed_only else _fill_descriptions(candidates, description_limit)
+    if not seed_only:
+        eligible_candidates: list[dict[str, Any]] = []
+        for job in candidates:
+            if is_phd_exclusive_job(
+                str(job.get("title") or ""), str(job.get("description") or "")
+            ):
+                phd_exclusive.append(job)
+            else:
+                eligible_candidates.append(job)
+        candidates = eligible_candidates
 
     routed: list[tuple[dict[str, Any], Category, list[str]]] = []
     unmatched: list[dict[str, Any]] = []
@@ -778,6 +996,12 @@ def execute(
             else:
                 skipped_claim += 1
     else:
+        for job in phd_exclusive:
+            if state.ignore(job, "phd_exclusive"):
+                ignored += 1
+            else:
+                skipped_claim += 1
+
         for job in outside_us:
             if state.ignore(job, "outside_us"):
                 ignored += 1
@@ -830,6 +1054,7 @@ def execute(
         "previously_seen": len(known),
         "unseen": len(new_jobs),
         "us_recent_candidates": len(candidates),
+        "phd_exclusive": len(phd_exclusive),
         "outside_us_or_unknown": len(outside_us),
         "stale": len(stale),
         "max_posting_age_days": max_age_days,
@@ -881,15 +1106,25 @@ def execute(
 def lambda_handler(event: dict[str, Any] | None, context: Any) -> dict[str, Any]:
     """AWS Lambda handler with baseline and webhook-test modes."""
     event = event or {}
+    raw_backfill_category = event.get("backfill_category")
+    if raw_backfill_category is not None and not isinstance(raw_backfill_category, str):
+        raise ValueError("backfill_category must be a category name")
+    backfill_category = (
+        raw_backfill_category.strip().lower() if raw_backfill_category else None
+    )
     if event.get("test_health_webhook"):
-        if event.get("test_webhooks") or event.get("seed_only"):
+        if event.get("test_webhooks") or event.get("seed_only") or backfill_category:
             raise ValueError("test_health_webhook cannot be combined with another mode")
         return test_health_webhook()
     if event.get("test_webhooks"):
-        if event.get("seed_only"):
-            raise ValueError("test_webhooks and seed_only cannot both be true")
+        if event.get("seed_only") or backfill_category:
+            raise ValueError("test_webhooks cannot be combined with another mode")
         return test_webhooks()
     seed_only = bool(event.get("seed_only", False))
+    if seed_only and backfill_category:
+        raise ValueError("seed_only and backfill_category cannot both be set")
+    if backfill_category and backfill_category not in {category.key for category in CATEGORIES}:
+        raise ValueError(f"Unknown backfill category: {backfill_category}")
     requested = event.get("seed_sources") or []
     if isinstance(requested, str):
         requested = [requested]
@@ -897,14 +1132,16 @@ def lambda_handler(event: dict[str, Any] | None, context: Any) -> dict[str, Any]
         raise ValueError("seed_sources must be a source name or a list of source names")
     if requested and not seed_only:
         raise ValueError("seed_sources requires seed_only=true")
+    if requested and backfill_category:
+        raise ValueError("seed_sources and backfill_category cannot both be set")
     partition_index = event.get("seed_partition")
     partition_count = event.get("seed_partition_count")
     if (partition_index is None) != (partition_count is None):
         raise ValueError("seed_partition and seed_partition_count must be supplied together")
     seed_partition = None
     if partition_index is not None:
-        if not seed_only:
-            raise ValueError("seed_partition requires seed_only=true")
+        if not seed_only and not backfill_category:
+            raise ValueError("seed_partition requires seed_only=true or backfill_category")
         if requested:
             raise ValueError("use either seed_sources or seed_partition, not both")
         if isinstance(partition_index, bool) or isinstance(partition_count, bool):
@@ -924,14 +1161,20 @@ def lambda_handler(event: dict[str, Any] | None, context: Any) -> dict[str, Any]
         seed_only=seed_only,
         only_sources=only_sources,
         seed_partition=seed_partition,
+        backfill_category=backfill_category,
     )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Fetch internship postings and route new ones to Discord.")
     parser.add_argument("--seed-only", action="store_true", help="record current matches without notifying Discord")
+    parser.add_argument(
+        "--backfill-category",
+        choices=[category.key for category in CATEGORIES],
+        help="deliver known-dated jobs from the last MAX_POSTING_AGE_DAYS",
+    )
     args = parser.parse_args()
-    execute(seed_only=args.seed_only)
+    execute(seed_only=args.seed_only, backfill_category=args.backfill_category)
     return 0
 
 
