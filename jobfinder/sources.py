@@ -21,10 +21,15 @@ from .custom_sources import (
     fetch_apple,
     fetch_bloomberg,
     fetch_citadel,
+    fetch_deloitte,
     fetch_deshaw,
+    fetch_ey,
     fetch_goldman,
     fetch_google,
+    fetch_kpmg,
+    fetch_linkedin,
     fetch_meta,
+    fetch_pwc,
     fetch_shopify,
     fetch_twosigma,
 )
@@ -718,7 +723,8 @@ def fetch_all(
     for c in cfg.get("netflix", []):
         add(c, "Netflix", "explore.jobs.netflix.net", lambda c=c: fetch_netflix(c["name"]))
     for c in cfg.get("oracle", []):
-        add(c, "Oracle Recruiting Cloud", f"{c['tenant']}.fa.oraclecloud.com",
+        oracle_host = c["tenant"] if "." in c["tenant"] else f"{c['tenant']}.fa.oraclecloud.com"
+        add(c, "Oracle Recruiting Cloud", oracle_host,
             lambda c=c: fetch_oracle(c["tenant"], c["site"], c["name"]))
     for c in cfg.get("sig", []):
         add(c, "SIG careers", "careers.sig.com", lambda c=c: fetch_sig(c["name"]))
@@ -743,6 +749,16 @@ def fetch_all(
         add(c, "Bloomberg careers", "bloomberg.avature.net", lambda c=c: fetch_bloomberg(c["name"]))
     for c in cfg.get("twosigma", []):
         add(c, "Two Sigma careers", "careers.twosigma.com", lambda c=c: fetch_twosigma(c["name"]))
+    for c in cfg.get("pwc", []):
+        add(c, "PwC careers", "jobs-us.pwc.com", lambda c=c: fetch_pwc(c["name"]))
+    for c in cfg.get("ey", []):
+        add(c, "EY early careers", "usearlycareers.ey.com", lambda c=c: fetch_ey(c["name"]))
+    for c in cfg.get("deloitte", []):
+        add(c, "Deloitte careers", "apply.deloitte.com", lambda c=c: fetch_deloitte(c["name"]))
+    for c in cfg.get("kpmg", []):
+        add(c, "KPMG careers", "www.kpmguscareers.com", lambda c=c: fetch_kpmg(c["name"]))
+    for c in cfg.get("linkedin", []):
+        add(c, "LinkedIn company jobs", "www.linkedin.com", lambda c=c: fetch_linkedin(c["name"]))
     if "usajobs" in cfg and os.environ.get("USAJOBS_API_KEY") and os.environ.get("USAJOBS_EMAIL"):
         federal = {"name": "USAJOBS", **cfg["usajobs"]}
         add(federal, "Federal", "data.usajobs.gov", lambda: fetch_usajobs(cfg["usajobs"]))

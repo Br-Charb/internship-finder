@@ -1711,6 +1711,69 @@ slug = "uber"
 tier = 2
 group = "software"
 
+# Accounting and professional-services firms. Their public career sites use a
+# mix of first-party pages and reusable ATS APIs, so each adapter is explicit.
+[[pwc]]
+name = "PwC"
+tier = 3
+group = "accounting"
+
+[[ey]]
+name = "EY"
+tier = 3
+group = "accounting"
+
+[[deloitte]]
+name = "Deloitte"
+tier = 3
+group = "accounting"
+
+[[kpmg]]
+name = "KPMG"
+tier = 3
+group = "accounting"
+
+[[workday]]
+name = "Baker Tilly"
+host = "bakertilly.wd5.myworkdayjobs.com"
+site = "BTCareers"
+tier = 3
+group = "accounting"
+
+[[workday]]
+name = "Crowe"
+host = "crowe.wd12.myworkdayjobs.com"
+site = "External_Careers"
+tier = 3
+group = "accounting"
+
+[[workday]]
+name = "Plante Moran"
+host = "plantemoran.wd1.myworkdayjobs.com"
+site = "pmexternalcareers"
+tier = 3
+group = "accounting"
+
+[[oracle]]
+name = "BDO USA"
+tenant = "ebqb.fa.us2.oraclecloud.com"
+site = "BDOEntryLevelCareers"
+tier = 3
+group = "accounting"
+
+[[oracle]]
+name = "Grant Thornton"
+tenant = "ehzq.fa.us2.oraclecloud.com"
+site = "CX_1"
+tier = 3
+group = "accounting"
+
+# LinkedIn's own internships, not arbitrary jobs advertised on LinkedIn.
+[[linkedin]]
+name = "LinkedIn"
+tier = 3
+group = "software"
+
 [[list]]
 name = "Simplify Summer 2027 list"
 urls = ["https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/dev/.github/scripts/listings.json", "https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/main/.github/scripts/listings.json"]

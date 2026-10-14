@@ -49,6 +49,57 @@ class CustomSourceTests(unittest.TestCase):
         self.assertEqual(1, len(jobs))
         self.assertEqual("software-intern", jobs[0]["source_job_id"])
 
+    @patch.object(custom_sources, "request")
+    def test_pwc_phenom_payload(self, request):
+        payload = {
+            "eagerLoadRefineSearch": {"data": {
+                "totalHits": 1,
+                "jobs": [{
+                    "title": "Tax Intern",
+                    "multi_location": ["Tampa, Florida"],
+                    "applyUrl": "https://pwc.wd3.myworkdayjobs.com/job/123",
+                    "postedDate": "2026-10-12T00:00:00Z",
+                    "country": "United States",
+                    "descriptionTeaser": "Assist with tax compliance.",
+                    "jobId": "123",
+                }],
+            }},
+        }
+        request.return_value = (
+            "<script>phApp.ddo = " + json.dumps(payload)
+            + "; phApp.experimentData = {};</script>"
+        )
+        jobs = custom_sources.fetch_pwc("PwC", max_pages=1)
+        self.assertEqual(1, len(jobs))
+        self.assertEqual("Tax Intern", jobs[0]["title"])
+        self.assertEqual("2026-10-12", jobs[0]["posted"])
+
+    @patch.object(custom_sources, "request")
+    def test_structured_job_detail(self, request):
+        posting = {
+            "@context": "https://schema.org",
+            "@type": "JobPosting",
+            "title": "Audit Intern",
+            "datePosted": "Oct 1, 2026",
+            "description": "<p>Accounting and GAAP.</p>",
+            "identifier": {"value": "A-123"},
+            "jobLocation": [{"address": {
+                "addressLocality": "Miami",
+                "addressRegion": "FL",
+                "addressCountry": "US",
+            }}],
+        }
+        request.return_value = (
+            '<script type="application/ld+json">' + json.dumps(posting) + "</script>"
+        )
+        jobs = custom_sources._details_to_jobs(
+            "Example Accounting", ["https://example.test/job/123"], workers=1
+        )
+        self.assertEqual("Miami, FL", jobs[0]["location"])
+        self.assertEqual("US", jobs[0]["country"])
+        self.assertEqual("2026-10-01", jobs[0]["posted"])
+        self.assertEqual("A-123", jobs[0]["source_job_id"])
+
     def test_turbo_value_resolves_reference_objects(self):
         values = ["title", "Software Intern", {"_0": 1}]
         self.assertEqual({"title": "Software Intern"}, custom_sources._turbo_value(values, 2))

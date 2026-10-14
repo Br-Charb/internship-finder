@@ -10,6 +10,7 @@ import datetime as dt
 import html
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlencode, urljoin
 
 from .util import FetchError, html_to_text, post_json, request
@@ -58,6 +59,225 @@ def _job(company: str, title: str, location: str, url: str, *, posted: str = "",
         "modality": modality or "",
         "season_hint": "",
     }
+
+
+_JOB_POSTING_SCRIPT = re.compile(
+    r'<script[^>]+type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _posting_date(value) -> str:
+    parsed = _iso(value)
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", parsed):
+        return parsed
+    for pattern in ("%b %d, %Y", "%B %d, %Y"):
+        try:
+            return dt.datetime.strptime(str(value), pattern).date().isoformat()
+        except ValueError:
+            pass
+    return ""
+
+
+def _job_posting_from_page(url: str) -> dict:
+    body = request(url, headers=_BROWSER_HEADERS, timeout=60)
+    for raw in _JOB_POSTING_SCRIPT.findall(body):
+        try:
+            # Some employers embed literal line breaks in description strings.
+            # ``strict=False`` accepts those while retaining HTML entities; the
+            # normal text conversion unescapes them later.
+            value = json.loads(raw.strip(), strict=False)
+        except json.JSONDecodeError:
+            continue
+        candidates = value if isinstance(value, list) else [value]
+        for candidate in candidates:
+            if isinstance(candidate, dict) and candidate.get("@type") == "JobPosting":
+                return candidate
+    raise FetchError(f"JobPosting structured data not found at {url}")
+
+
+def _posting_locations(posting: dict) -> tuple[str, str]:
+    raw_locations = posting.get("jobLocation") or []
+    if isinstance(raw_locations, dict):
+        raw_locations = [raw_locations]
+    locations: list[str] = []
+    countries: list[str] = []
+    for item in raw_locations:
+        if not isinstance(item, dict):
+            continue
+        address = item.get("address") or {}
+        if not isinstance(address, dict):
+            continue
+        locality = str(address.get("addressLocality") or "").strip()
+        region = str(address.get("addressRegion") or "").strip()
+        country = str(address.get("addressCountry") or "").strip()
+        label = ", ".join(dict.fromkeys(part for part in (locality, region) if part))
+        if label and label not in locations:
+            locations.append(label)
+        if country and country not in countries:
+            countries.append(country)
+    return "; ".join(locations), "; ".join(countries)
+
+
+def _details_to_jobs(company: str, urls: list[str], workers: int = 4) -> list[dict]:
+    def load(url: str) -> dict:
+        posting = _job_posting_from_page(url)
+        location, country = _posting_locations(posting)
+        identifier = posting.get("identifier") or {}
+        source_job_id = (
+            str(identifier.get("value") or "")
+            if isinstance(identifier, dict) else str(identifier or "")
+        )
+        return _job(
+            company,
+            str(posting.get("title") or ""),
+            location,
+            url,
+            posted=_posting_date(posting.get("datePosted")),
+            country=country,
+            description=html_to_text(str(posting.get("description") or "")),
+            employment_type=str(posting.get("employmentType") or ""),
+            source_job_id=source_job_id or url.rstrip("/").rsplit("/", 1)[-1],
+        )
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        return list(pool.map(load, urls))
+
+
+def fetch_pwc(company: str, max_pages: int = 20) -> list[dict]:
+    """Fetch PwC's Phenom search payload, which includes Workday apply URLs."""
+    out: list[dict] = []
+    offset = 0
+    for _ in range(max_pages):
+        url = f"https://jobs-us.pwc.com/us/en/search-results?keywords=intern&from={offset}&s=1"
+        body = request(url, headers=_BROWSER_HEADERS, timeout=60)
+        match = re.search(r"phApp\.ddo = (.*?); phApp\.experimentData", body, re.DOTALL)
+        if not match:
+            raise FetchError("PwC Phenom search payload not found")
+        try:
+            search = (json.loads(match.group(1)).get("eagerLoadRefineSearch") or {}).get("data") or {}
+        except json.JSONDecodeError as error:
+            raise FetchError(f"PwC Phenom search payload could not be decoded: {error}") from error
+        batch = search.get("jobs") or []
+        for raw in batch:
+            locations = raw.get("multi_location") or [raw.get("location")]
+            out.append(_job(
+                company,
+                str(raw.get("title") or ""),
+                "; ".join(str(value) for value in locations if value),
+                str(raw.get("applyUrl") or ""),
+                posted=_iso(raw.get("postedDate")),
+                country=str(raw.get("country") or "United States"),
+                description=str(raw.get("descriptionTeaser") or ""),
+                employment_type=str(raw.get("type") or ""),
+                source_job_id=str(raw.get("jobId") or raw.get("reqId") or ""),
+            ))
+        offset += len(batch)
+        if not batch or offset >= int(search.get("totalHits") or 0):
+            break
+    return out
+
+
+def fetch_ey(company: str, max_pages: int = 10) -> list[dict]:
+    links: list[str] = []
+    for page in range(1, max_pages + 1):
+        body = request(
+            f"https://usearlycareers.ey.com/search-jobs?k=intern&p={page}",
+            headers=_BROWSER_HEADERS,
+            timeout=60,
+        )
+        links.extend(urljoin("https://usearlycareers.ey.com", path) for path in re.findall(
+            r'<a href="([^"]+)" data-job-id="[^"]+">', body
+        ))
+        pages = re.search(r'data-total-pages="(\d+)"', body)
+        if not pages or page >= int(pages.group(1)):
+            break
+    return _details_to_jobs(company, list(dict.fromkeys(links)))
+
+
+def fetch_deloitte(company: str, max_pages: int = 10) -> list[dict]:
+    links: list[str] = []
+    for page in range(max_pages):
+        offset = page * 100
+        url = (
+            "https://apply.deloitte.com/careers?"
+            f"3_149_3=637&3_5_3=478&jobRecordsPerPage=100&jobOffset={offset}"
+        )
+        body = request(url, headers=_BROWSER_HEADERS, timeout=60)
+        articles = re.findall(r'<article class="article--result .*?</article>', body, re.DOTALL)
+        batch: list[str] = []
+        for article in articles:
+            title_match = re.search(r'<a href="([^"]+/JobDetail/[^"]+)"[^>]*>(.*?)</a>', article, re.DOTALL)
+            if title_match and re.search(r"(?i)\bintern(?:ship)?\b|\bco[ -]?op\b", html_to_text(title_match.group(2))):
+                batch.append(urljoin(
+                    "https://apply.deloitte.com", html.unescape(title_match.group(1))
+                ))
+        links.extend(batch)
+        if len(articles) < 100:
+            break
+    return _details_to_jobs(company, list(dict.fromkeys(links)))
+
+
+def fetch_kpmg(company: str, max_pages: int = 10) -> list[dict]:
+    endpoint = (
+        "https://www.kpmguscareers.com/wp-content/themes/understrap-child-main/"
+        "page-templates/google/get-jobs.php"
+    )
+    links: list[str] = []
+    for page in range(1, max_pages + 1):
+        data = json.loads(request(
+            endpoint + "?" + urlencode({
+                "ajax": "1", "page_type": "job-search", "keyword": "intern", "spage": page,
+            }),
+            headers=_BROWSER_HEADERS,
+            timeout=60,
+        ))
+        postings = data.get("postings") or {}
+        body = str(postings.get("jobs") or "")
+        batch = re.findall(r'href="/jobdetail/\?jobId=(\d+)"', body)
+        links.extend(f"https://www.kpmguscareers.com/jobdetail/?jobId={job_id}" for job_id in batch)
+        if not batch or len(links) >= int(postings.get("size") or 0):
+            break
+    return _details_to_jobs(company, list(dict.fromkeys(links)))
+
+
+def fetch_linkedin(company: str) -> list[dict]:
+    """Best-effort monitor for LinkedIn's own US internship postings."""
+    url = (
+        "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?"
+        "keywords=intern&location=United%20States&f_C=1337&start=0"
+    )
+    body = request(url, headers=_BROWSER_HEADERS, timeout=60, retries=0)
+    if "ccookie=" in body and "http-equiv=\"refresh\"" in body:
+        raise FetchError("LinkedIn returned an anti-bot challenge")
+    cards = re.findall(r'<li>(.*?)</li>', body, re.DOTALL)
+    out: list[dict] = []
+    for card in cards:
+        link_match = re.search(r'href="([^"]+/jobs/view/[^"]+)"', card)
+        title_match = re.search(
+            r'<h3[^>]*class="[^"]*base-search-card__title[^"]*"[^>]*>(.*?)</h3>',
+            card,
+            re.DOTALL,
+        )
+        if not link_match or not title_match:
+            continue
+        location_match = re.search(
+            r'<span[^>]*class="[^"]*job-search-card__location[^"]*"[^>]*>(.*?)</span>',
+            card,
+            re.DOTALL,
+        )
+        date_match = re.search(r'<time[^>]+datetime="([^"]+)"', card)
+        id_match = re.search(r'urn:li:jobPosting:(\d+)', card)
+        out.append(_job(
+            company,
+            html_to_text(title_match.group(1)),
+            html_to_text(location_match.group(1)) if location_match else "United States",
+            html.unescape(link_match.group(1)).split("?", 1)[0],
+            posted=_iso(date_match.group(1) if date_match else ""),
+            country="United States",
+            source_job_id=id_match.group(1) if id_match else "",
+        ))
+    return out
 
 
 def fetch_apple(company: str, max_pages: int = 30) -> list[dict]:
