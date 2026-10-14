@@ -291,7 +291,9 @@ class ExecutionTests(unittest.TestCase):
         category = next(item for item in run.CATEGORIES if item.key == "software")
         payload = run.discord_payload(JOBS[0], category, ["software", "python"])
         embed = payload["embeds"][0]
-        self.assertEqual(JOBS[0]["title"], embed["title"])
+        self.assertEqual(
+            f"{JOBS[0]['company']} — {JOBS[0]['title']}", embed["title"]
+        )
         self.assertEqual(JOBS[0]["url"], embed["url"])
         fields = {field["name"]: field for field in embed["fields"]}
         self.assertEqual("Example Co", fields["Company"]["value"])

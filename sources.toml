@@ -1664,7 +1664,7 @@ group = "software"
 [[meta]]
 name = "Meta"
 slug = "meta"
-tier = 1
+tier = 2
 group = "software"
 
 [[microsoft]]

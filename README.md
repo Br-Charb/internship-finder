@@ -22,7 +22,7 @@ Tier 1 sources are checked every five minutes. Tier 2 sources are distributed ac
 1. `jobfinder/sources.py` and `jobfinder/custom_sources.py` normalize all supported job boards.
 2. `jobfinder/match.py` keeps internship/co-op/student roles, requires a recognizable US location, rejects postings with a supplied date older than `MAX_POSTING_AGE_DAYS`, and conservatively excludes clearly PhD-only roles. A role that accepts BS, MS, or PhD candidates is retained.
 3. The matcher scores Software, Hardware/Embedded/Computer Engineering, Mechanical, Aerospace, Accounting, and Finance/Information Systems/FinTech keywords. A multi-category job goes only to its highest-scoring primary category.
-4. `run.py` checks DynamoDB, atomically claims an unseen job, and posts a Discord embed with its clickable position title, company, location, category, posted date, requirements snapshot, and apply link.
+4. `run.py` checks DynamoDB, atomically claims an unseen job, and posts a Discord embed whose clickable title contains both company and position for desktop and mobile previews, followed by location, category, posted date, requirements snapshot, and apply link.
 5. Successful delivery changes the DynamoDB record to `delivered`. Rejected jobs are remembered as `ignored`, and a failed Discord call releases its claim for retry.
 
 If an ATS supplies no posting date, the job is retained because the scraper cannot prove that it is stale. Correct initial seeding prevents those already-open jobs from being announced as new.

@@ -361,15 +361,19 @@ def discord_payload(job: dict[str, Any], category: Category, matched_terms: list
     posted = str(job.get("posted") or "date not supplied")
     source = str(job.get("source") or "ATS source")
     description = str(job.get("description") or "")
+    company = str(job.get("company") or "Unknown")
+    position = str(job.get("title") or "Untitled role")
     return {
         "username": "Internship Finder",
         "allowed_mentions": {"parse": []},
         "embeds": [{
-            "title": _truncate(str(job.get("title") or "Untitled role"), 256),
+            # Discord mobile previews prominently display the embed title but
+            # may omit fields, so put the company in the title as well.
+            "title": _truncate(f"{company} — {position}", 256),
             "url": str(job["url"]),
             "color": category.color,
             "fields": [
-                {"name": "Company", "value": _truncate(str(job.get("company") or "Unknown"), 1024), "inline": True},
+                {"name": "Company", "value": _truncate(company, 1024), "inline": True},
                 {"name": "Location", "value": _truncate(str(job.get("location") or "Not listed"), 1024), "inline": False},
                 {"name": "Category", "value": category.label, "inline": True},
                 {"name": "Posted", "value": posted, "inline": True},
