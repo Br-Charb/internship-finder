@@ -15,7 +15,7 @@ It does not build or publish a website. Discord is the only presentation layer, 
 
 The catalog's company-sector labels currently include 70 software, 46 AI, 34 quant, 27 fintech, 23 aerospace, 17 entertainment, 16 banking, 9 accounting, 7 chips/hardware, 4 health, 1 consulting, and 44 other direct sources. Accounting firms include PwC, EY, Deloitte, KPMG, BDO USA, Grant Thornton, Baker Tilly, Crowe, and Plante Moran. LinkedIn's own company internships are monitored separately; this does not scrape every job advertised by every company on LinkedIn. These labels are not routing limits: every posting from every source can be routed to any of the six Discord categories.
 
-Tier 1 sources are checked every five minutes. Tier 2 sources are distributed across three five-minute slots, so each is checked every fifteen minutes. Tier 3 sources are distributed across twelve slots, so each is checked hourly. This avoids trying to fetch the entire catalog at once.
+Tier 1 sources are checked every five minutes. Tier 2 sources are distributed across three five-minute slots, so each is checked every fifteen minutes. Tier 3 sources are distributed across twelve slots, so each is checked hourly. Meta is intentionally tier 3 because its endpoint repeatedly rate-limits more frequent AWS requests. This avoids trying to fetch the entire catalog at once.
 
 ## Processing and Discord routing
 
@@ -53,11 +53,25 @@ When the health webhook is configured, it receives:
 
 The scraper cannot send an alert if Lambda or EventBridge stops completely. A missing daily heartbeat is the Discord-side warning for that case; a CloudWatch alarm can also provide independent email notification.
 
+## Per-company `/notify` commands
+
+An optional Discord application adds three private slash-command responses:
+
+- `/notify company:<name>` subscribes the member to that company in the current job channel.
+- `/unnotify company:<name>` removes that channel-specific subscription.
+- `/notifications` lists the member's subscriptions for the current job channel only.
+
+The channel determines the category. For example, running `/notify Meta` in Software subscribes only to Meta posts routed to Software; it does not ping that member for a Meta Accounting post. Company names autocomplete from the direct-company entries in `sources.toml`.
+
+Every company/category cohort gets one non-mentionable Discord role. A matching job contains one role mention, such as `@Notify: Meta / Software`, instead of mentioning every member separately. The bot is the only component allowed to ping these roles. If nobody subscribes to a company, its alerts continue through the original webhook with no ping. The six webhooks remain configured as a fallback and for ordinary unpinged alerts.
+
+This feature uses a second Lambda named `internship-finder-commands`. It receives signed Discord interactions through a Function URL, responds immediately, and performs role changes in an asynchronous invocation. It does not need an EventBridge schedule, API Gateway, a continuously connected bot process, or a website.
+
 ## DynamoDB state
 
 Create `internship-finder-seen` in the same AWS Region as Lambda with partition key `job_id` of type **String** and no sort key. No external database account or database server is required.
 
-Each job is a small item whose state is `seeded`, `ignored`, `pending`, or `delivered`. The same table stores small source-health counters and list revision markers. It does not store full job descriptions.
+Each job is a small item whose state is `seeded`, `ignored`, `pending`, or `delivered`. The same table stores small source-health counters, list revision markers, notification-role mappings, Discord user IDs, and each user's selected company/category pairs. It does not store full job descriptions or Discord message content. No external database is required.
 
 For a new table, **On-demand** capacity is easiest and has no fixed provisioned-capacity reservation, but AWS bills actual requests. Provisioned capacity can use DynamoDB's qualifying always-free provisioned allowance, but too-low capacity can throttle a bursty scan. AWS does not automatically stop services at a budget amount, so keep the billing budget and alerts enabled; a budget is a notification, not a hard spending cap. See the current [DynamoDB pricing page](https://aws.amazon.com/dynamodb/pricing/) before choosing a mode.
 
@@ -91,6 +105,19 @@ Recommended environment variables:
 ```text
 DISCORD_WEBHOOK_HEALTH=<health channel URL>
 MAX_POSTING_AGE_DAYS=14
+```
+
+To activate role pings, also add these to the scheduled `internship-finder` Lambda. The values are numeric IDs copied from Discord, not webhook URLs:
+
+```text
+DISCORD_BOT_TOKEN=<Discord application bot token>
+DISCORD_GUILD_ID=<Discord server ID>
+DISCORD_CHANNEL_SOFTWARE=<software channel ID>
+DISCORD_CHANNEL_HARDWARE=<hardware channel ID>
+DISCORD_CHANNEL_MECHANICAL=<mechanical channel ID>
+DISCORD_CHANNEL_AEROSPACE=<aerospace channel ID>
+DISCORD_CHANNEL_ACCOUNTING=<accounting channel ID>
+DISCORD_CHANNEL_FINANCE=<finance channel ID>
 ```
 
 Other optional variables:
@@ -136,6 +163,101 @@ The Lambda execution role needs the following inline policy. Replace `REGION` an
 
 The standard Lambda basic execution role already provides CloudWatch Logs access.
 
+## Set up the Discord command application
+
+### 1. Create and invite the Discord bot
+
+1. Open the [Discord Developer Portal](https://discord.com/developers/applications), choose **New Application**, and name it `Internship Finder`.
+2. On **General Information**, copy the **Application ID** and **Public Key**. Keep the public key; the command Lambda uses it to verify every request.
+3. Open **Bot**, choose **Reset Token**, and copy the bot token into a password manager. Never commit or post it. No privileged gateway intents are needed.
+4. Open **OAuth2 -> URL Generator**. Select the `bot` and `applications.commands` scopes. Grant **View Channels**, **Send Messages**, **Embed Links**, **Manage Roles**, and **Mention Everyone**. Open the generated URL and add the bot to the server.
+5. In **Server Settings -> Roles**, move the bot's role above any `Notify:` roles. The application creates those roles non-mentionable so normal members cannot ping them.
+6. In Discord **User Settings -> Advanced**, enable Developer Mode. Right-click the server and each of the six job channels to copy their numeric IDs.
+
+Limit the bot to the six job channels with Discord channel permission overrides if desired. It needs View Channel, Send Messages, Embed Links, and Mention Everyone in those channels; Manage Roles is a server-level permission.
+
+### 2. Package and create the command Lambda
+
+From the repository root in PowerShell, run:
+
+```powershell
+.\scripts\package-discord-commands.ps1
+```
+
+This builds Linux x86_64 Python 3.13 dependencies and creates `internship-finder-commands.zip`. If Python reports that `pip` is unavailable, run `python -m ensurepip --upgrade` once and retry.
+
+In AWS Lambda, create a second function:
+
+- Function name: `internship-finder-commands`
+- Runtime: Python 3.13
+- Architecture: x86_64
+- Handler: `discord_commands.lambda_handler`
+- Memory: 256 MB or 512 MB
+- Timeout: 30 seconds
+- Region: the scraper and DynamoDB Region (`us-east-1`)
+- Provisioned concurrency: none
+
+Upload `internship-finder-commands.zip`, then add:
+
+```text
+DYNAMODB_TABLE=internship-finder-seen
+DISCORD_PUBLIC_KEY=<application public key>
+DISCORD_BOT_TOKEN=<bot token>
+DISCORD_GUILD_ID=<server ID>
+DISCORD_CHANNEL_SOFTWARE=<software channel ID>
+DISCORD_CHANNEL_HARDWARE=<hardware channel ID>
+DISCORD_CHANNEL_MECHANICAL=<mechanical channel ID>
+DISCORD_CHANNEL_AEROSPACE=<aerospace channel ID>
+DISCORD_CHANNEL_ACCOUNTING=<accounting channel ID>
+DISCORD_CHANNEL_FINANCE=<finance channel ID>
+```
+
+Add this inline policy to the command Lambda's execution role. Replace `REGION`, `ACCOUNT_ID`, and the function name if different:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "NotificationSubscriptions",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:REGION:ACCOUNT_ID:table/internship-finder-seen"
+    },
+    {
+      "Sid": "RunCommandWorker",
+      "Effect": "Allow",
+      "Action": "lambda:InvokeFunction",
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT_ID:function:internship-finder-commands"
+    }
+  ]
+}
+```
+
+The existing scheduled Lambda already has the `dynamodb:BatchGetItem` permission needed to find role mappings. Add the bot token, server ID, and six channel IDs shown in the previous section to that function as well, rebuild `internship-finder-lambda.zip`, and upload it.
+
+### 3. Connect Discord to the Function URL
+
+1. In `internship-finder-commands`, open **Configuration -> Function URL** and create a URL with auth type **NONE**. CORS is not required. Public access is intentional: the handler rejects requests that do not have Discord's valid Ed25519 signature.
+2. Copy the Function URL. In the Discord application, open **General Information**, paste it into **Interactions Endpoint URL**, and save. Discord sends a signed validation ping; a successful save proves the URL and public key work.
+3. Register the three server commands from the repository root. The token prompt is hidden:
+
+```powershell
+$env:DISCORD_APPLICATION_ID = "<application ID>"
+$env:DISCORD_GUILD_ID = "<server ID>"
+python .\scripts\register-discord-commands.py
+Remove-Item Env:DISCORD_APPLICATION_ID, Env:DISCORD_GUILD_ID
+```
+
+Because these are guild commands, they normally appear in that server immediately. Test `/notify Meta` inside the Software channel, then `/notifications`, then `/unnotify Meta`. The replies are ephemeral and visible only to the member running the command.
+
+Do not use Lambda's ordinary **Test** button with an invented Discord request: signature validation will correctly reject it. Validation happens through the Developer Portal endpoint check and real slash commands. CloudWatch Logs for `internship-finder-commands` show worker errors without logging the bot or interaction token.
+
 ## Package and test locally
 
 From the repository root in PowerShell:
@@ -143,9 +265,10 @@ From the repository root in PowerShell:
 ```powershell
 python -m unittest discover -s tests -v
 .\scripts\package-lambda.ps1
+.\scripts\package-discord-commands.ps1
 ```
 
-This creates `internship-finder-lambda.zip`, with `run.py` at its root. AWS supplies `boto3`; there are no third-party runtime packages.
+These create `internship-finder-lambda.zip`, with `run.py` at its root, and `internship-finder-commands.zip`, with `discord_commands.py` at its root. AWS supplies `boto3`; the command ZIP additionally bundles PyNaCl for Discord signature verification.
 
 To check real public endpoints without touching AWS, DynamoDB, or Discord:
 
@@ -241,5 +364,6 @@ The GitHub Actions workflow is CI only. It runs unit tests after pushes and pull
 5. A normal `{}` invocation finishes without delivery failures.
 6. EventBridge creates a fresh invocation after five minutes.
 7. One daily health heartbeat appears in Discord at about 8:00 AM Eastern.
+8. `/notify`, `/unnotify`, and `/notifications` work only in the six job channels, and a subscribed test company creates one `Notify:` role instead of individual mentions.
 
 There is no HTML renderer, `docs/` site output, GitHub Pages deployment, or website publishing step.
