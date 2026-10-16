@@ -36,6 +36,9 @@ class FakeState:
     def known_ids(self, job_ids):
         return set(job_ids) & self.known
 
+    def notification_role(self, guild_id, category, company):
+        return None
+
     def source_revisions(self, source_names):
         return {}
 
@@ -136,6 +139,43 @@ class ExecutionTests(unittest.TestCase):
         self.assertEqual("software", FakeState.instance.claimed[0][1])
         self.assertEqual("delivered", FakeState.instance.completed[0][2])
         post.assert_called_once()
+
+    @patch.object(run, "DynamoSeenJobs", FakeState)
+    @patch.object(run, "github_list_revision", return_value="")
+    @patch.object(run, "fetch_all", return_value=(JOBS, []))
+    def test_subscribed_company_uses_one_bot_role_ping(self, _fetch, _revision):
+        urls = {
+            category.key: f"https://discord.com/api/webhooks/{category.key}/secret"
+            for category in run.CATEGORIES
+        }
+        bot_env = {
+            "DISCORD_BOT_TOKEN": "bot-secret",
+            "DISCORD_GUILD_ID": "123456789",
+            "DISCORD_CHANNEL_SOFTWARE": "987654321",
+        }
+        with self.env(), patch.dict(os.environ, bot_env, clear=False), patch.object(
+            run, "_webhook_urls", return_value=urls
+        ), patch.object(
+            FakeState,
+            "notification_role",
+            return_value={"state": "notification_role", "role_id": "555555555"},
+        ), patch.object(run, "DiscordBotClient") as bot_client, patch.object(
+            run, "post_to_discord"
+        ) as webhook:
+            summary = run.execute()
+
+        self.assertEqual(1, summary["delivered"])
+        self.assertEqual(1, summary["role_pings"])
+        webhook.assert_not_called()
+        bot_client.assert_called_once_with("bot-secret")
+        channel_id, payload = bot_client.return_value.create_message.call_args.args
+        self.assertEqual("987654321", channel_id)
+        self.assertEqual("<@&555555555>", payload["content"])
+        self.assertEqual(
+            {"parse": [], "roles": ["555555555"]},
+            payload["allowed_mentions"],
+        )
+        self.assertNotIn("username", payload)
 
     @patch.object(run, "DynamoSeenJobs", FakeState)
     @patch.object(run, "github_list_revision", return_value="")

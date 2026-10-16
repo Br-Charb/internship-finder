@@ -33,6 +33,11 @@ from jobfinder.match import (
     is_united_states_job,
     requirements_snippet,
 )
+from jobfinder.notifications import (
+    CATEGORY_CHANNEL_ENV,
+    DiscordBotClient,
+    notification_role_key,
+)
 from jobfinder.sources import fetch_all, fetch_description, github_list_revision
 from jobfinder.util import FetchError, job_key
 
@@ -106,6 +111,31 @@ class DynamoSeenJobs:
                     time.sleep(min(0.05 * (2 ** unprocessed_attempt), 2.0))
                     unprocessed_attempt += 1
         return known
+
+    def notification_role(
+        self, guild_id: str, category: str, company: str
+    ) -> dict[str, Any] | None:
+        """Read one company/category notification role with the existing BatchGet grant."""
+        request = {
+            self.table_name: {
+                "Keys": [{"job_id": notification_role_key(guild_id, category, company)}],
+                "ProjectionExpression": "job_id, #state, role_id",
+                "ExpressionAttributeNames": {"#state": "state"},
+                "ConsistentRead": True,
+            }
+        }
+        attempt = 0
+        while request:
+            response = self.resource.batch_get_item(RequestItems=request)
+            items = response.get("Responses", {}).get(self.table_name, [])
+            for item in items:
+                if item.get("state") == "notification_role":
+                    return item
+            request = response.get("UnprocessedKeys") or {}
+            if request:
+                time.sleep(min(0.05 * (2 ** attempt), 2.0))
+                attempt += 1
+        return None
 
     @staticmethod
     def _source_key(source_name: str) -> str:
@@ -424,6 +454,64 @@ def post_to_discord(webhook_url: str, payload: dict[str, Any], attempts: int = 4
             continue
         raise RuntimeError(f"Discord webhook returned HTTP {status}")
     raise RuntimeError("Discord webhook retries exhausted")
+
+
+def _bot_delivery_config(category: Category) -> tuple[str, str, str] | None:
+    """Return bot token, guild ID, and channel ID when role pings are configured."""
+    token = os.environ.get("DISCORD_BOT_TOKEN", "").strip()
+    guild_id = os.environ.get("DISCORD_GUILD_ID", "").strip()
+    channel_variable = CATEGORY_CHANNEL_ENV[category.key]
+    channel_id = os.environ.get(channel_variable, "").strip()
+    if not token or not guild_id or not channel_id:
+        return None
+    if not guild_id.isdigit():
+        raise ValueError("DISCORD_GUILD_ID must be a numeric Discord server ID")
+    if not channel_id.isdigit():
+        raise ValueError(f"{channel_variable} must be a numeric Discord channel ID")
+    return token, guild_id, channel_id
+
+
+def deliver_job(
+    state: DynamoSeenJobs,
+    webhooks: dict[str, str],
+    job: dict[str, Any],
+    category: Category,
+    matched_terms: list[str],
+) -> bool:
+    """Deliver one job and return whether a subscribed-company role was pinged."""
+    payload = discord_payload(job, category, matched_terms)
+    bot_config = _bot_delivery_config(category)
+    if bot_config is None:
+        post_to_discord(webhooks[category.key], payload)
+        return False
+
+    token, guild_id, channel_id = bot_config
+    try:
+        role = state.notification_role(
+            guild_id, category.key, str(job.get("company") or "")
+        )
+    except Exception as error:
+        # A subscription lookup must not suppress the underlying job alert.
+        print(
+            f"WARNING notification-role lookup failed for {job['key']}: {error}; "
+            "using the webhook without a ping",
+            file=sys.stderr,
+        )
+        post_to_discord(webhooks[category.key], payload)
+        return False
+
+    role_id = str((role or {}).get("role_id") or "")
+    if not role_id.isdigit():
+        post_to_discord(webhooks[category.key], payload)
+        return False
+
+    # Bot messages can safely mention a non-mentionable role when the bot has
+    # Mention Everyone. Explicit allowed_mentions prevents every other mention.
+    payload.pop("username", None)
+    payload["content"] = f"<@&{role_id}>"
+    payload["allowed_mentions"] = {"parse": [], "roles": [role_id]}
+    DiscordBotClient(token).create_message(channel_id, payload)
+    return True
 
 
 def test_webhooks() -> dict[str, Any]:
@@ -988,7 +1076,7 @@ def execute(
         else:
             unmatched.append(job)
 
-    delivered = seeded = ignored = skipped_claim = failures = 0
+    delivered = seeded = ignored = skipped_claim = failures = role_pings = 0
     if seed_only:
         categories = {job["key"]: category for job, category, _terms in routed}
         for job in new_jobs:
@@ -1031,7 +1119,8 @@ def execute(
                 continue
 
             try:
-                post_to_discord(webhooks[category.key], discord_payload(job, category, terms))
+                if deliver_job(state, webhooks, job, category, terms):
+                    role_pings += 1
             except Exception as error:  # continue other categories and retry this job next invocation
                 failures += 1
                 print(f"ERROR delivery {job['key']} ({category.key}): {error}", file=sys.stderr)
@@ -1065,6 +1154,7 @@ def execute(
         "descriptions_loaded": loaded,
         "categorized": len(routed),
         "delivered": delivered,
+        "role_pings": role_pings,
         "seeded": seeded,
         "ignored": ignored,
         "claim_conflicts": skipped_claim,

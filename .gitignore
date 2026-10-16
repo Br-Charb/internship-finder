@@ -3,3 +3,5 @@ __pycache__/
 .claude/
 .lambda-build/
 internship-finder-lambda.zip
+.commands-build/
+internship-finder-commands.zip

@@ -15,7 +15,7 @@ New-Item -ItemType Directory -Path (Join-Path $BuildDir "jobfinder") | Out-Null
 
 Copy-Item -LiteralPath (Join-Path $ProjectRoot "run.py") -Destination $BuildDir
 Copy-Item -LiteralPath (Join-Path $ProjectRoot "sources.toml") -Destination $BuildDir
-foreach ($File in @("__init__.py", "custom_sources.py", "match.py", "sources.py", "util.py")) {
+foreach ($File in @("__init__.py", "custom_sources.py", "match.py", "notifications.py", "sources.py", "util.py")) {
     Copy-Item -LiteralPath (Join-Path $ProjectRoot "jobfinder\$File") -Destination (Join-Path $BuildDir "jobfinder")
 }
 
